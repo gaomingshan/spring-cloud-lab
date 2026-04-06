@@ -1,0 +1,25 @@
+server:
+  port: 8400
+spring:
+  application:
+    name: stream-producer
+  cloud:
+    stream:
+      rocketmq:
+        binder:
+          name-server: 127.0.0.1:9876  # RocketMQ NameServer
+      bindings:
+        # 普通消息输出
+        order-out-0:
+          destination: ORDER_TOPIC       # Topic 名称
+          content-type: application/json
+        # 延迟消息输出
+        delay-out-0:
+          destination: DELAY_TOPIC
+          content-type: application/json
+        # 事务消息输出
+        tx-out-0:
+          destination: TX_TOPIC
+          content-type: application/json
+      function:
+        definition: orderSupplier

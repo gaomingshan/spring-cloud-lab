@@ -1,0 +1,57 @@
+server:
+  port: 8500
+spring:
+  application:
+    name: lab-sharding
+  shardingsphere:
+    # 数据源配置（2个库，模拟分库）
+    datasource:
+      names: ds0,ds1
+      ds0:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/sharding_db0?useUnicode=true&characterEncoding=utf8
+        username: root
+        password: root123
+      ds1:
+        type: com.zaxxer.hikari.HikariDataSource
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        jdbc-url: jdbc:mysql://127.0.0.1:3306/sharding_db1?useUnicode=true&characterEncoding=utf8
+        username: root
+        password: root123
+    rules:
+      sharding:
+        tables:
+          # 订单表：按 user_id 分库，按 order_id 分表
+          # 实际物理表：ds0.t_order_0, ds0.t_order_1, ds1.t_order_0, ds1.t_order_1
+          t_order:
+            actual-data-nodes: ds${0..1}.t_order_${0..1}  # 2库×2表=4张
+            # 分库策略：user_id % 2 决定路由到 ds0 还是 ds1
+            database-strategy:
+              standard:
+                sharding-column: user_id
+                sharding-algorithm-name: db-inline
+            # 分表策略：order_id % 2 决定路由到 t_order_0 还是 t_order_1
+            table-strategy:
+              standard:
+                sharding-column: order_id
+                sharding-algorithm-name: table-inline
+            # 分布式主键生成策略（Snowflake）
+            key-generate-strategy:
+              column: order_id
+              key-generator-name: snowflake
+        sharding-algorithms:
+          db-inline:
+            type: INLINE
+            props:
+              algorithm-expression: ds${user_id % 2}
+          table-inline:
+            type: INLINE
+            props:
+              algorithm-expression: t_order_${order_id % 2}
+        key-generators:
+          snowflake:
+            type: SNOWFLAKE
+    # 打印 SQL 路由日志（学习调试用，生产关闭）
+    props:
+      sql-show: true

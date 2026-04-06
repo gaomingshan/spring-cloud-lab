@@ -1,0 +1,31 @@
+server:
+  port: 8091  # 启动第二个实例时改为 8091
+
+spring:
+  application:
+    name: registry-provider  # 服务名，Nacos 中的注册名
+  cloud:
+    nacos:
+      server-addr: 192.168.179.128:8848
+      username: nacos
+      password: nacos
+      discovery:
+        # 命名空间（dev/prod 隔离）
+        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+        # 分组
+        group: DEFAULT_GROUP
+        # 实例权重（0~1，调大/调小可影响负载均衡分发比例）
+        weight: 1.0
+        # 自定义元数据（可用于灰度路由标识）
+        metadata:
+          version: v1
+          zone: beijing
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,nacos-discovery
+  endpoint:
+    health:
+      show-details: always

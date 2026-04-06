@@ -1,0 +1,13 @@
+server:
+  port: 8100  # 实例2改8101，实例3改8102
+
+spring:
+  application:
+    name: feign-provider
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+      discovery:
+        metadata:
+          version: v1
+          zone: beijing

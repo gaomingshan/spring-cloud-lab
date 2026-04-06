@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="app"/>
+
+    <!-- 控制台输出（可读格式，含 MDC traceId） -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} [traceId=%X{traceId}] - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!--
+        JSON 结构化日志（Filebeat 采集用）
+        SkyWalking Agent 自动注入 MDC key: tid（TraceId）、sid（SpanId）
+        logstash-logback-encoder 将日志序列化为 JSON，方便 Elasticsearch 解析
+    -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>logs/${APP_NAME}.json.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/${APP_NAME}.json.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 添加自定义字段 -->
+            <customFields>{"app":"${APP_NAME}","env":"dev"}</customFields>
+            <!-- 包含 MDC 字段（traceId/tid 由 SkyWalking 注入）-->
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>tid</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="JSON_FILE"/>
+    </root>
+
+    <logger name="com.lab" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="JSON_FILE"/>
+    </logger>
+</configuration>

@@ -1,0 +1,24 @@
+server:
+  port: 8800
+spring:
+  application:
+    name: lab-xxljob
+
+xxl:
+  job:
+    admin:
+      # XXL-Job Admin 地址（多个用逗号分隔）
+      addresses: http://127.0.0.1:8858/xxl-job-admin
+    executor:
+      # 执行器 AppName（需与 Admin 控制台配置一致）
+      appname: lab-xxljob-executor
+      # 执行器注册地址（为空则自动获取IP）
+      address:
+      ip:
+      port: 9999         # 执行器与 Admin 通信端口
+      # 执行器日志目录
+      logpath: /data/applogs/xxl-job/jobhandler
+      # 日志保留天数
+      logretentiondays: 30
+    # 访问令牌（Admin 配置了则此处需一致）
+    accessToken: default_token

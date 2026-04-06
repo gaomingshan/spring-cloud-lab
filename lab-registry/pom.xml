@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>com.lab</groupId>
+        <artifactId>spring-cloud-lab</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>lab-registry</artifactId>
+    <packaging>pom</packaging>
+    <name>lab-registry</name>
+    <description>【注册中心】Nacos Discovery - 服务注册、发现、健康检查</description>
+
+    <modules>
+        <module>registry-provider</module>
+        <module>registry-consumer</module>
+    </modules>
+</project>

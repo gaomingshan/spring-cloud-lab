@@ -1,0 +1,21 @@
+server:
+  port: 8401
+spring:
+  application:
+    name: stream-consumer
+  cloud:
+    stream:
+      rocketmq:
+        binder:
+          name-server: 127.0.0.1:9876
+      bindings:
+        order-in-0:
+          destination: ORDER_TOPIC
+          content-type: application/json
+          group: order-consumer-group    # 消费者组（同组竞争消费，不同组广播）
+        delay-in-0:
+          destination: DELAY_TOPIC
+          content-type: application/json
+          group: delay-consumer-group
+      function:
+        definition: orderConsumer;delayConsumer

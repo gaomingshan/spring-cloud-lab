@@ -1,0 +1,19 @@
+server:
+  port: 8900
+spring:
+  application:
+    name: auth-server
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 1
+
+sa-token:
+  token-name: Authorization
+  timeout: 86400         # Token 有效期（秒），-1 永不过期
+  active-timeout: 1800   # Token 活跃有效期（-1 不限制）
+  is-concurrent: true    # 允许同一账号多地同时登录
+  is-share: true         # 同账号多次登录共享同一Token
+  token-style: uuid      # Token 风格：uuid/random-32/random-64
+  is-log: true           # 开启日志

@@ -1,0 +1,111 @@
+==============================
+公司级分布式系统技术基线（中台标准模板）
+==============================
+
+【运行环境】
+- JDK 17
+- Spring Boot 3.2.x
+- Spring Cloud 2023.0.0
+- Spring Cloud Alibaba 2022.0.0.0
+
+--------------------------------------------------
+
+【核心框架】
+- Spring Framework
+- Spring Boot
+- Spring Async
+- Jackson
+- Lombok
+- MapStruct
+- Hibernate Validator
+
+--------------------------------------------------
+
+【数据与存储】
+- 数据库：MySQL 8.0
+- 异构数据库：MongoDB
+- ORM：MyBatis-Flex
+- 分库分表：ShardingSphere
+- 分布式 ID：Snowflake / Leaf
+- 缓存：Redis 7.x + Caffeine（多级缓存）
+- 分布式锁：Redisson
+- 搜索：Elasticsearch
+- 对象存储：MinIO
+
+--------------------------------------------------
+
+【分布式治理】
+- 注册中心：Nacos 2.x
+- 配置中心：Nacos 2.x
+- 服务调用：OpenFeign + OkHttp
+- 负载均衡：Spring Cloud LoadBalancer
+- 流控熔断：Sentinel
+- 分布式事务：Seata（AT / TCC）
+- 消息队列：spring cloud stream
+
+--------------------------------------------------
+
+【接入层与网关】
+- Spring Cloud Gateway
+- 统一限流
+- API 版本控制（URL Path 版本：/v1/、/v2/）
+- 签名校验
+- 防重放攻击
+- 灰度发布机制
+
+--------------------------------------------------
+
+【安全体系】
+- 认证鉴权：Sa-Token（网关 + 业务服务统一认证）
+- 密码加密：jBCrypt
+- XSS 防护：OWASP Java Encoder
+- 数据脱敏组件
+
+--------------------------------------------------
+
+【统一规范与基础能力】
+- 统一响应模型
+- 统一异常体系
+- 统一错误码中心
+- API 幂等机制
+- 分布式 ID 组件
+- 多级缓存组件
+- 数据一致性补偿机制
+- MQ 统一封装模型
+- Feign 统一封装模型
+
+--------------------------------------------------
+
+【任务调度】
+- XXL-Job
+- 分布式补偿任务
+
+--------------------------------------------------
+
+【日志与可观测】
+- 日志框架：Logback / Log4j2
+- ELK 日志体系
+- SkyWalking（APM）
+- Prometheus
+- Grafana
+- 统一 TraceId 透传规范
+- 统一 MDC 日志规范
+- 统一日志打印规范
+
+--------------------------------------------------
+
+【辅助工具库】
+- Apache Commons 系列
+- Guava
+- EasyExcel
+- Apache POI
+- TransmittableThreadLocal
+
+==============================
+架构特征：
+- 多模块 Maven 架构
+- Starter 化能力沉淀
+- 强治理与强约束规范
+- 可规模化复制
+- 支撑 20+ 微服务扩展
+==============================

@@ -1,0 +1,49 @@
+spring:
+  application:
+    name: lab-config-center
+  cloud:
+    nacos:
+      # Nacos Server 地址
+      server-addr: 127.0.0.1:8848
+      config:
+        # 配置文件格式
+        file-extension: yaml
+        # 命名空间（对应 Nacos 控制台 namespace ID，默认 public 留空）
+        namespace:
+        # 分组（默认 DEFAULT_GROUP）
+        group: DEFAULT_GROUP
+        # 共享配置（多个微服务公用的配置，如数据库、Redis 等）
+        shared-configs:
+          - data-id: common-datasource.yaml
+            group: SHARED_GROUP
+            refresh: true
+          - data-id: common-redis.yaml
+            group: SHARED_GROUP
+            refresh: true
+        # 扩展配置（优先级高于 shared-configs）
+        extension-configs:
+          - data-id: lab-config-center-ext.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+
+---
+# dev 环境（profile = dev 时激活）
+spring:
+  config:
+    activate:
+      on-profile: dev
+  cloud:
+    nacos:
+      config:
+        namespace: dev-namespace-id
+
+---
+# prod 环境
+spring:
+  config:
+    activate:
+      on-profile: prod
+  cloud:
+    nacos:
+      config:
+        namespace: prod-namespace-id
