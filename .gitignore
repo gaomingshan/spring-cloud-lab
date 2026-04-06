@@ -1,0 +1,122 @@
+.idea/compiler.xml
+.idea/encodings.xml
+.idea/jarRepositories.xml
+.idea/misc.xml
+.idea/vcs.xml
+.idea/workspace.xml
+.idea/dictionaries/project.xml
+.idea/httpRequests/2026-03-30T235521.200.json
+.idea/httpRequests/2026-03-30T235628.200.json
+.idea/httpRequests/2026-03-31T000357.200.json
+.idea/httpRequests/2026-03-31T000429.200.json
+.idea/httpRequests/2026-04-01T000146.500.json
+.idea/httpRequests/2026-04-01T000638.200.json
+.idea/httpRequests/http-client.cookies
+.idea/httpRequests/http-requests-log.http
+
+############################
+# IDEA
+############################
+.idea/
+*.iml
+*.iws
+out/
+
+############################
+# Maven
+############################
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+
+############################
+# Gradle
+############################
+.gradle/
+build/
+
+############################
+# Logs
+############################
+logs/
+*.log
+*.out
+
+############################
+# OS files
+############################
+.DS_Store
+Thumbs.db
+
+############################
+# Java
+############################
+*.class
+*.jar
+*.war
+*.ear
+
+############################
+# Spring Boot
+############################
+*.pid
+*.pid.lock
+*.tmp
+
+############################
+# Env / Config（敏感信息）
+############################
+.env
+.env.*
+application-local.yml
+application-dev.yml
+application-prod.yml
+bootstrap-dev.yml
+bootstrap-prod.yml
+
+############################
+# IDE / Editor
+############################
+.vscode/
+
+############################
+# Node（如果前端混合项目）
+############################
+node_modules/
+dist/
+npm-debug.log*
+yarn-error.log*
+
+############################
+# Docker
+############################
+*.tar
+
+############################
+# Test
+############################
+coverage/
+*.coverage
+
+############################
+# Temp files
+############################
+*.swp
+*.swo
+*~
+
+############################
+# Mac
+############################
+.AppleDouble
+.LSOverride
+
+############################
+# Linux
+############################
+*~
