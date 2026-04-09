@@ -18,13 +18,13 @@
         <module>lab-gateway</module>
         <module>lab-feign</module>
         <module>lab-sentinel</module>
-        <module>lab-seata</module>
-        <module>lab-stream</module>
-        <module>lab-sharding</module>
-        <module>lab-multi-datasource</module>
-        <module>lab-observability</module>
-        <module>lab-xxljob</module>
-        <module>lab-security</module>
+<!--        <module>lab-seata</module>-->
+<!--        <module>lab-stream</module>-->
+<!--        <module>lab-sharding</module>-->
+<!--        <module>lab-multi-datasource</module>-->
+<!--        <module>lab-observability</module>-->
+<!--        <module>lab-xxljob</module>-->
+<!--        <module>lab-security</module>-->
     </modules>
 
     <properties>
