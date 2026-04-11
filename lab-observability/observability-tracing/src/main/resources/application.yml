@@ -5,11 +5,21 @@ spring:
     name: observability-tracing
   cloud:
     nacos:
-      server-addr: 127.0.0.1:8848
+      server-addr: 192.168.179.128:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+        group: DEFAULT_GROUP
 
-# OpenTelemetry OTLP Exporter 配置
-# SkyWalking OAP 9.x 内置 OTLP gRPC Receiver，默认端口 11800
-otel:
-  exporter:
-    otlp:
-      endpoint: http://127.0.0.1:11800
+# Spring Boot 3 Tracing 配置（Micrometer Tracing + OpenTelemetry 桥接）
+management:
+  tracing:
+    # 采样率：1.0 = 100% 采样（开发环境全量采集，生产环境建议 0.1~0.5）
+    sampling:
+      probability: 1.0
+  # OTLP Exporter 配置：将 Trace 数据发送到 SkyWalking OAP
+  # SkyWalking OAP 9.x 内置 OTLP gRPC Receiver（默认端口 11800）
+  otlp:
+    tracing:
+      endpoint: http://192.168.179.128:11800

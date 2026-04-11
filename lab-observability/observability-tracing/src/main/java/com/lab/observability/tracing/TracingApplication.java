@@ -7,23 +7,17 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 /**
  * 链路追踪演示启动类
  *
- * 技术栈：OpenTelemetry SDK → OTLP gRPC → SkyWalking OAP → SkyWalking UI
+ * 技术栈：Micrometer Tracing（门面）→ bridge-otel → OpenTelemetry SDK → OTLP → SkyWalking OAP → UI
  *
- * 两种使用方式（本模块都演示）：
+ * Spring Boot 3 官方推荐架构：
+ *   1. 应用代码面向 Micrometer Tracing API 编程（io.micrometer.tracing.Tracer）
+ *   2. micrometer-tracing-bridge-otel 将 Micrometer API 桥接到 OpenTelemetry SDK
+ *   3. opentelemetry-exporter-otlp 通过 OTLP 协议将 Trace 数据发送到 SkyWalking OAP
+ *   4. Spring Boot 自动配置完成全部接线，无需手动创建任何 Bean
  *
- * 方式一：OTel Java Agent（无侵入，推荐生产使用）
- *   java -javaagent:opentelemetry-javaagent.jar \
- *        -Dotel.service.name=observability-tracing \
- *        -Dotel.exporter.otlp.endpoint=http://127.0.0.1:11800 \
- *        -jar observability-tracing.jar
- *   Agent 自动完成 HTTP/JDBC/Redis 等框架的 Span 采集和 TraceId 透传
- *
- * 方式二：OTel SDK 手动埋点（本模块代码演示）
- *   在业务代码中手动创建 Span，适合追踪自定义业务逻辑
- *   通过 OtelConfig 配置 TracerProvider + OTLP Exporter
- *
- * SkyWalking OAP 9.x 原生支持 OTLP gRPC Receiver：
- *   接收 OpenTelemetry 标准格式的 Trace 数据，展示在 SkyWalking UI 中
+ * 核心配置（application.yml）：
+ *   management.tracing.sampling.probability=1.0  → 采样率
+ *   management.otlp.tracing.endpoint=...         → SkyWalking OAP OTLP 地址
  *
  * 访问地址：
  * - 应用接口：http://localhost:8702/tracing/order

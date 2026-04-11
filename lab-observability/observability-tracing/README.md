@@ -2,18 +2,21 @@
 
 ## 技术栈
 
-OpenTelemetry SDK → OTLP gRPC → SkyWalking OAP → SkyWalking UI
+Micrometer Tracing（门面）→ bridge-otel → OpenTelemetry SDK → OTLP → SkyWalking OAP → UI
 
 ## 架构说明
 
 ```
-业务代码（OpenTelemetry API）
-  │ 手动创建 Span / Agent 自动采集
+业务代码（Micrometer Tracing API）
+  │ io.micrometer.tracing.Tracer 创建 Span
   ▼
-OpenTelemetry SDK
+micrometer-tracing-bridge-otel（桥接层）
+  │ 将 Micrometer Span 转换为 OpenTelemetry Span
+  ▼
+OpenTelemetry SDK（Spring Boot 3 自动配置）
   │ BatchSpanProcessor 批量处理
   ▼
-OTLP gRPC Exporter
+OTLP Exporter（gRPC）
   │ 标准 OTLP 协议发送 Trace 数据
   ▼
 SkyWalking OAP（OTLP gRPC Receiver，端口 11800）
@@ -22,36 +25,58 @@ SkyWalking OAP（OTLP gRPC Receiver，端口 11800）
 SkyWalking UI（链路拓扑图 + Span 详情）
 ```
 
-## 为什么选择 OpenTelemetry + SkyWalking？
+## 为什么是 Micrometer Tracing + OpenTelemetry + SkyWalking？
 
 | 维度 | 说明 |
 |------|------|
-| **标准化** | OpenTelemetry 是 CNCF 官方可观测性标准，避免厂商锁定 |
+| **Spring Boot 3 官方推荐** | Micrometer Tracing 是 Spring Boot 3 内置的追踪门面，替代了旧的 Spring Cloud Sleuth |
+| **门面解耦** | 应用代码只依赖 Micrometer API，底层可切换 OpenTelemetry 或 Brave 实现 |
+| **零配置** | Spring Boot 自动配置完成 SDK + Exporter + Processor 的全部接线 |
+| **标准化** | 底层使用 OpenTelemetry（CNCF 官方标准），避免厂商锁定 |
 | **可视化** | SkyWalking 提供强大的服务拓扑图、Trace 分析、性能指标 |
-| **兼容性** | SkyWalking OAP 9.x 原生支持 OTLP gRPC Receiver |
-| **灵活性** | 未来可轻松切换后端（Jaeger、Zipkin 等），只需更换 Exporter |
 
-## 两种使用方式
+## 依赖关系
 
-### 方式一：OTel Java Agent（无侵入，推荐生产使用）
+```xml
+<!-- ① Actuator：提供 Micrometer 基础设施 -->
+spring-boot-starter-actuator
 
-```bash
-java -javaagent:opentelemetry-javaagent.jar \
-     -Dotel.service.name=observability-tracing \
-     -Dotel.traces.exporter=otlp \
-     -Dotel.exporter.otlp.endpoint=http://127.0.0.1:11800 \
-     -jar observability-tracing.jar
+<!-- ② 桥接层：Micrometer Tracing API → OpenTelemetry SDK -->
+micrometer-tracing-bridge-otel
+
+<!-- ③ OTLP 导出：将 Trace 数据发送到 SkyWalking OAP -->
+opentelemetry-exporter-otlp
 ```
 
-Agent 自动完成：
-- HTTP 请求的 Span 采集和 TraceId 透传
-- JDBC、Redis、MQ 等框架的自动追踪
-- 将 TraceId 写入 MDC（可与 Logging 模块联动）
+Spring Boot 3 自动完成：
+- 创建 `SdkTracerProvider` + `BatchSpanProcessor`
+- 注册 `OtlpGrpcSpanExporter`
+- 将 `io.micrometer.tracing.Tracer` 绑定到 OpenTelemetry 底层
+- 自动将 TraceId 注入 MDC（日志中可用 `%X{traceId}`）
 
-### 方式二：OTel SDK 手动埋点（本模块代码演示）
+## 核心配置（application.yml）
 
-通过 `OtelConfig` 配置 `TracerProvider` + `OTLP Exporter`，在业务代码中手动创建 Span。
-适合追踪自定义业务逻辑（如：订单处理流程中的库存检查、订单保存等子步骤）。
+```yaml
+management:
+  tracing:
+    sampling:
+      probability: 1.0    # 采样率：1.0=100%（生产建议 0.1~0.5）
+  otlp:
+    tracing:
+      endpoint: http://127.0.0.1:11800  # SkyWalking OAP OTLP 地址
+```
+
+## Micrometer Tracing API 速查
+
+| 操作 | 代码 |
+|------|------|
+| 创建 Span | `tracer.nextSpan().name("xxx").start()` |
+| 激活 Span | `tracer.withSpan(span)` → SpanInScope（try-with-resources） |
+| 添加标签 | `span.tag("key", "value")` |
+| 记录事件 | `span.event("事件描述")` |
+| 记录异常 | `span.error(exception)` |
+| 获取 TraceId | `span.context().traceId()` |
+| 结束 Span | `span.end()` |
 
 ## 核心概念
 
@@ -60,9 +85,8 @@ Agent 自动完成：
 | **Trace** | 一次完整的请求链路，由唯一的 TraceId 标识 |
 | **Span** | 链路中的一个操作单元，有开始/结束时间 |
 | **Parent-Child** | Span 之间的父子关系，形成调用树 |
-| **Attributes** | Span 上的键值对标签（如 user.id、db.system） |
-| **Events** | Span 上的时间点事件（如「库存检查通过」） |
-| **StatusCode** | Span 状态：OK / ERROR |
+| **Tag** | Span 上的键值对标签（如 user.id、db.system） |
+| **Event** | Span 上的时间点事件（如「库存检查通过」） |
 
 ## 演示步骤
 
