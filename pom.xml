@@ -22,7 +22,7 @@
 <!--        <module>lab-stream</module>-->
 <!--        <module>lab-sharding</module>-->
 <!--        <module>lab-multi-datasource</module>-->
-<!--        <module>lab-observability</module>-->
+        <module>lab-observability</module>
 <!--        <module>lab-xxljob</module>-->
 <!--        <module>lab-security</module>-->
     </modules>
@@ -56,6 +56,8 @@
         <jbcrypt.version>0.4</jbcrypt.version>
         <!-- 可观测性（logstash-logback-encoder 非 BOM 管理；micrometer 由 Spring Boot BOM 管理）-->
         <logstash-encoder.version>7.4</logstash-encoder.version>
+        <opentelemetry.version>1.36.0</opentelemetry.version>
+        <opentelemetry-semconv.version>1.23.1-alpha</opentelemetry-semconv.version>
 
         <!-- 工具库 -->
         <lombok.version>1.18.32</lombok.version>
@@ -169,6 +171,20 @@
                 <groupId>net.logstash.logback</groupId>
                 <artifactId>logstash-logback-encoder</artifactId>
                 <version>${logstash-encoder.version}</version>
+            </dependency>
+            <!-- OpenTelemetry BOM -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <!-- OpenTelemetry Semantic Conventions -->
+            <dependency>
+                <groupId>io.opentelemetry.semconv</groupId>
+                <artifactId>opentelemetry-semconv</artifactId>
+                <version>${opentelemetry-semconv.version}</version>
             </dependency>
 
             <!-- ⑪ 工具库 -->

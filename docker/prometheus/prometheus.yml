@@ -2,10 +2,10 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'lab-observability'
+  - job_name: 'observability-metrics'
     metrics_path: '/actuator/prometheus'
     static_configs:
-      - targets: ['host.docker.internal:8700']
+      - targets: ['host.docker.internal:8701']
 
   - job_name: 'lab-gateway'
     metrics_path: '/actuator/prometheus'

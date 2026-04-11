@@ -1,121 +1,125 @@
 # lab-observability - 可观测性
 
+> 聚合模块（`packaging=pom`），包含三个独立可运行的子模块，每个子模块聚焦可观测性的一个支柱。
+
 ## 一、三大支柱总览
 
-| 支柱 | 技术栈 | 职责 |
-|------|--------|------|
-| Metrics（指标） | Micrometer → Prometheus → Grafana | 系统/业务指标监控大盘 |
-| Tracing（链路追踪） | SkyWalking Java Agent → OAP → UI | 跨服务调用链路可视化 |
-| Logging（日志） | Logback JSON → Filebeat → ELK | 结构化日志聚合检索 |
+| 支柱 | 子模块 | 技术栈 | 端口 | 职责 |
+|------|--------|--------|------|------|
+| Metrics（指标） | `observability-metrics` | Micrometer → Prometheus → Grafana | 8701 | 系统/业务指标监控大盘 |
+| Tracing（链路追踪） | `observability-tracing` | OpenTelemetry → OTLP → SkyWalking OAP → UI | 8702 | 跨服务调用链路可视化 |
+| Logging（日志） | `observability-logging` | Logback JSON → Logstash → Elasticsearch → Kibana | 8703 | 结构化日志聚合检索 |
 
-三者通过 **TraceId** 串联：Kibana 按 TraceId 找日志，SkyWalking 看对应链路图。
+三者通过 **TraceId** 串联：Kibana 按 TraceId 检索日志 → SkyWalking 查看对应链路图 → Grafana 观察对应时间段指标。
 
 ---
 
-## 二、Metrics - 指标监控
+## 二、架构全景
 
-### 工作原理
 ```
-业务代码（Micrometer API）
-  │ Counter/Timer/Gauge
-  ▼
-Micrometer Registry（Prometheus格式）
-  │
-  ▼
-/actuator/prometheus 端点
-  │ Prometheus 定时拉取（pull模式，默认15s）
-  ▼
-Prometheus 时序数据库
-  │ PromQL 查询
-  ▼
-Grafana 监控大盘
-```
-
-### 自动暴露的 Spring Boot 指标
-- `http_server_requests`：接口 QPS、耗时、错误率
-- `jvm_memory_used_bytes`：JVM 内存
-- `hikaricp_connections`：连接池状态
-- `system_cpu_usage`：CPU 使用率
-
-### 自定义业务指标（本模块演示）
-```java
-Counter.builder("lab.order").tag("type", "create").register(registry);
-Timer.builder("lab.order.duration").register(registry);
+                        OpenTelemetry（统一遥测标准）
+                               │
+               ┌───────────────┼───────────────┐
+               ▼               ▼               ▼
+         Traces(OTLP)    Metrics(Pull)    Logs(JSON)
+               │               │               │
+               ▼               ▼               ▼
+        SkyWalking OAP    Prometheus       Logstash
+        (OTLP Receiver)   (Scrape)        (Pipeline)
+               │               │               │
+               ▼               ▼               ▼
+        SkyWalking UI      Grafana        Elasticsearch
+                                               │
+                                               ▼
+                                            Kibana
 ```
 
 ---
 
-## 三、Tracing - 链路追踪
+## 三、模块目录结构
 
-### SkyWalking Agent 无侵入方式
-**不需要在 pom.xml 添加任何依赖！**
-
-启动参数：
-```bash
-java -javaagent:/path/to/skywalking-agent/skywalking-agent.jar \
-     -Dskywalking.agent.service_name=lab-observability \
-     -Dskywalking.collector.backend_service=127.0.0.1:11800 \
-     -jar lab-observability.jar
 ```
-
-Agent 自动完成：
-- 跨服务 TraceId 生成与透传（HTTP Header: sw8）
-- 将 TraceId 写入 MDC（key: `tid`）
-- 数据库、Redis、MQ 调用自动追踪
-
----
-
-## 四、Logging - 日志体系
-
-### 日志链路
-```
-Logback（MDC 含 tid=TraceId）
-  │ 输出 JSON 格式日志到文件
-  ▼
-Filebeat（采集日志文件）
-  ▼
-Logstash（解析/过滤/转换）
-  ▼
-Elasticsearch（存储）
-  ▼
-Kibana（按 tid 检索，关联 SkyWalking 链路）
-```
-
-### JSON 日志示例
-```json
-{
-  "@timestamp": "2024-01-01T10:00:00.000Z",
-  "level": "INFO",
-  "logger_name": "com.lab.observability.controller.ObservabilityController",
-  "message": "创建订单",
-  "app": "lab-observability",
-  "tid": "3.145.119.48.15000.1",
-  "userId": "1001"
-}
+lab-observability/                          ← 聚合 POM（无业务代码）
+├── pom.xml
+├── README.md                               ← 本文件（总览）
+│
+├── observability-metrics/                  ← 【Metrics】Micrometer + Prometheus + Grafana
+│   ├── pom.xml
+│   ├── README.md
+│   └── src/
+│       └── main/java/com/lab/observability/metrics/
+│           ├── MetricsApplication.java
+│           └── controller/MetricsController.java
+│
+├── observability-tracing/                  ← 【Tracing】OpenTelemetry + SkyWalking
+│   ├── pom.xml
+│   ├── README.md
+│   └── src/
+│       └── main/java/com/lab/observability/tracing/
+│           ├── TracingApplication.java
+│           ├── config/OtelConfig.java
+│           └── controller/TracingController.java
+│
+└── observability-logging/                  ← 【Logging】Logback + ELK
+    ├── pom.xml
+    ├── README.md
+    └── src/
+        └── main/java/com/lab/observability/logging/
+            ├── LoggingApplication.java
+            └── controller/LoggingController.java
 ```
 
 ---
 
-## 五、演示步骤
+## 四、TraceId 串联机制
+
+| 支柱 | TraceId 来源 | 说明 |
+|------|-------------|------|
+| Tracing | OTel Agent/SDK 生成 | 链路追踪的核心标识 |
+| Logging | MDC 注入 `traceId` | 日志中打印 TraceId，Kibana 可按此字段检索 |
+| Metrics | Exemplar 关联 | 指标样本可关联到具体 TraceId（Grafana Exemplar 功能） |
+
+---
+
+## 五、快速开始
 
 ```bash
-# 1. 启动基础设施
-docker-compose up prometheus grafana skywalking-oap skywalking-ui elasticsearch kibana
+# 1. 启动全部基础设施
+docker-compose up -d prometheus grafana elasticsearch logstash kibana skywalking-oap skywalking-ui
 
-# 2. 启动服务（带 SkyWalking Agent）
-java -javaagent:./skywalking-agent/skywalking-agent.jar \
-     -Dskywalking.agent.service_name=lab-observability \
-     -Dskywalking.collector.backend_service=127.0.0.1:11800 \
-     -jar target/lab-observability.jar
+# 2. 分别启动三个子模块（各独立运行）
+cd lab-observability/observability-metrics  && mvn spring-boot:run
+cd lab-observability/observability-tracing  && mvn spring-boot:run
+cd lab-observability/observability-logging  && mvn spring-boot:run
 
-# 3. 查看 Prometheus 指标
-curl http://localhost:8700/actuator/prometheus
+# 3. 访问各子模块接口
+# Metrics
+curl -X POST http://localhost:8701/metrics/order
+curl http://localhost:8701/actuator/prometheus
 
-# 4. 触发业务请求（生成指标和链路数据）
-for i in {1..10}; do curl -X POST http://localhost:8700/obs/order; done
+# Tracing
+curl -X POST "http://localhost:8702/tracing/order?userId=1001"
 
-# 5. 查看监控大盘
+# Logging
+curl "http://localhost:8703/logging/demo?userId=1001"
+
+# 4. 查看监控大盘
 # Grafana:    http://localhost:3000  (admin/admin)
 # SkyWalking: http://localhost:8080
 # Kibana:     http://localhost:5601
+# Prometheus: http://localhost:9090
 ```
+
+---
+
+## 六、外部基础设施
+
+| 基础设施 | 用途 | 端口 |
+|---------|------|------|
+| Prometheus | 指标采集与存储 | 9090 |
+| Grafana | 指标可视化大盘 | 3000 |
+| SkyWalking OAP | 链路数据接收（OTLP gRPC） | 11800 / 12800 |
+| SkyWalking UI | 链路可视化 | 8080 |
+| Elasticsearch | 日志/链路数据存储 | 9200 |
+| Logstash | 日志管道（解析/转换） | 5044 / 5000 |
+| Kibana | 日志可视化检索 | 5601 |

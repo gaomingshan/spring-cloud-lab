@@ -182,6 +182,22 @@ services:
     networks:
       - lab-net
 
+  # ==================== Logstash ====================
+  logstash:
+    image: logstash:8.13.0
+    container_name: lab-logstash
+    ports:
+      - "5044:5044"
+      - "5000:5000"
+    volumes:
+      - ./docker/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    depends_on:
+      - elasticsearch
+    networks:
+      - lab-net
+
   # ==================== SkyWalking OAP ====================
   skywalking-oap:
     image: apache/skywalking-oap-server:9.7.0
