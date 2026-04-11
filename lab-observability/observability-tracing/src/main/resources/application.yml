@@ -1,0 +1,15 @@
+server:
+  port: 8702
+spring:
+  application:
+    name: observability-tracing
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+
+# OpenTelemetry OTLP Exporter 配置
+# SkyWalking OAP 9.x 内置 OTLP gRPC Receiver，默认端口 11800
+otel:
+  exporter:
+    otlp:
+      endpoint: http://127.0.0.1:11800

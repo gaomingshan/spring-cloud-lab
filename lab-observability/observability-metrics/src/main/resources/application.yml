@@ -1,0 +1,25 @@
+server:
+  port: 8701
+spring:
+  application:
+    name: observability-metrics
+  cloud:
+    nacos:
+      server-addr: 127.0.0.1:8848
+
+# Actuator 端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics,env
+  endpoint:
+    health:
+      show-details: always
+    prometheus:
+      enabled: true
+  # Micrometer 公共标签（所有指标携带这些标签，便于 Grafana 按服务/环境筛选）
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      env: dev
