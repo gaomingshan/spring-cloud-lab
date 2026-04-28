@@ -25,9 +25,9 @@
               启动时挂 -javaagent 自动埋点，应用代码无需引入任何 Tracing 依赖。
               Agent 自动拦截所有 HTTP/RPC/DB 调用。
 
-              Agent 下载：
-                Maven 坐标：org.apache.skywalking:skywalking-agent:10.1.0
-                下载页面：https://skywalking.apache.org/downloads/
+              Agent 下载（非 Maven 仓库，从 Apache 官方获取）：
+                https://skywalking.apache.org/downloads/
+                解压后取 skywalking-agent/skywalking-agent.jar
 
             备用 OTLP 方案（参见 TracingApplication.java 文档）：
               micrometer-tracing-bridge-otel + opentelemetry-exporter-otlp

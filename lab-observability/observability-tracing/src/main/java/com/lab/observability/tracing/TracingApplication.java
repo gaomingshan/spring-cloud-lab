@@ -18,9 +18,8 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
  * 引入任何 Tracing 依赖或手动创建 Span。
  *
  * Agent 获取方式：
- *   Maven 坐标：org.apache.skywalking:skywalking-agent:10.1.0
- *   pom.xml 中已配置 maven-dependency-plugin 自动下载到 target/skywalking/
- *   也可从 https://skywalking.apache.org/downloads/ 手动下载
+ *   https://skywalking.apache.org/downloads/
+ *   下载对应版本 .tar.gz，解压后取 skywalking-agent/skywalking-agent.jar
  *
  * <h3>备用方案：Micrometer Tracing + OTLP/HTTP</h3>
  * 当需要不绑定 SkyWalking、走 Spring Boot 3 标准 OTLP 通道时：
