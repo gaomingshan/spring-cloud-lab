@@ -12,14 +12,35 @@ spring:
         namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
         group: DEFAULT_GROUP
 
-# Spring Boot 3 Tracing 配置（Micrometer Tracing + OpenTelemetry 桥接）
-management:
-  tracing:
-    # 采样率：1.0 = 100% 采样（开发环境全量采集，生产环境建议 0.1~0.5）
-    sampling:
-      probability: 1.0
-  # OTLP Exporter 配置：将 Trace 数据发送到 SkyWalking OAP
-  # SkyWalking OAP 9.x 内置 OTLP gRPC Receiver（默认端口 11800）
-  otlp:
-    tracing:
-      endpoint: http://192.168.179.128:11800
+# -------------------------------------------------------------------
+# SkyWalking Java Agent 方案（当前启用）
+#
+# 启动命令：
+#   java -javaagent:/path/to/skywalking-agent.jar \
+#        -DSW_AGENT_NAME=observability-tracing \
+#        -DSW_AGENT_COLLECTOR_BACKEND_SERVICES=192.168.179.128:11800 \
+#        -jar observability-tracing.jar
+#
+# Agent 自动拦截 Spring MVC / RestTemplate / Feign / Redis / MySQL 等，
+# 无需引入额外依赖，也无需在应用代码中写任何追踪逻辑。
+# -------------------------------------------------------------------
+
+# -------------------------------------------------------------------
+# 备用 OTLP/HTTP 方案（Spring Boot 3 官方推荐，需配合依赖）
+#
+# 依赖（pom.xml）：
+#   io.micrometer:micrometer-tracing-bridge-otel
+#   io.opentelemetry:opentelemetry-exporter-otlp
+#
+# 前提：SkyWalking OAP 需启用 OTLP Receiver（SW_RECEIVER_OTEL=default）
+#   OTLP HTTP 端口 4318，需 map 到容器
+#
+# 配置示例：
+# management:
+#   tracing:
+#     sampling:
+#       probability: 1.0
+#   otlp:
+#     tracing:
+#       endpoint: http://192.168.179.128:4318/v1/traces
+# -------------------------------------------------------------------

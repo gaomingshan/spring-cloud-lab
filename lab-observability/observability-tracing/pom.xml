@@ -10,7 +10,7 @@
     </parent>
     <artifactId>observability-tracing</artifactId>
     <name>observability-tracing</name>
-    <description>【链路追踪】OpenTelemetry + SkyWalking</description>
+    <description>【链路追踪】SkyWalking Java Agent 零侵入方案</description>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -20,24 +20,22 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
-        <!-- Actuator：提供 Micrometer Tracing 自动配置基础 -->
+        <!--
+            SkyWalking Java Agent 方案（零侵入，推荐）：
+              启动时挂 -javaagent 自动埋点，应用代码无需引入任何 Tracing 依赖。
+              Agent 自动拦截所有 HTTP/RPC/DB 调用。
+
+              Agent 下载：
+                Maven 坐标：org.apache.skywalking:skywalking-agent:10.1.0
+                下载页面：https://skywalking.apache.org/downloads/
+
+            备用 OTLP 方案（参见 TracingApplication.java 文档）：
+              micrometer-tracing-bridge-otel + opentelemetry-exporter-otlp
+              → OTLP/HTTP → SkyWalking OAP :4318/v1/traces
+        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
-        <!--
-            Micrometer Tracing → OpenTelemetry 桥接层
-            Spring Boot 3 官方推荐：应用代码使用 Micrometer Tracing API（门面）
-            底层自动桥接到 OpenTelemetry SDK，由 Spring Boot 自动配置
-        -->
-        <dependency>
-            <groupId>io.micrometer</groupId>
-            <artifactId>micrometer-tracing-bridge-otel</artifactId>
-        </dependency>
-        <!-- OTLP Exporter：将 Trace 数据通过 OTLP 协议发送到 SkyWalking OAP -->
-        <dependency>
-            <groupId>io.opentelemetry</groupId>
-            <artifactId>opentelemetry-exporter-otlp</artifactId>
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
