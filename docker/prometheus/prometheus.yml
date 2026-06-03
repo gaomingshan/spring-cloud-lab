@@ -1,0 +1,25 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'observability-metrics'
+    metrics_path: '/actuator/prometheus'
+    static_configs:
+      - targets: ['192.168.179.1:8701']
+
+  # 以下两个 job 需要目标服务先引入 micrometer-registry-prometheus 依赖：
+  # <dependency>
+  #     <groupId>io.micrometer</groupId>
+  #     <artifactId>micrometer-registry-prometheus</artifactId>
+  # </dependency>
+  #
+  # - job_name: 'lab-gateway'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['192.168.179.1:8080']
+  #
+  # - job_name: 'lab-sentinel'
+  #   metrics_path: '/actuator/prometheus'
+  #   static_configs:
+  #     - targets: ['192.168.179.1:8200']
