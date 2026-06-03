@@ -1,65 +1,116 @@
-// ================= 日志配置 =================
+// ======================================================
+// Docker Logs -> Loki
+// ======================================================
+
 discovery.docker "containers" {
   host = "unix:///var/run/docker.sock"
 }
 
-loki.source.docker "default" {
+loki.source.docker "containers" {
   host       = "unix:///var/run/docker.sock"
   targets    = discovery.docker.containers.targets
-  forward_to = [loki.write.loki.receiver]
+  forward_to = [loki.write.default.receiver]
 }
 
-loki.write "loki" {
+loki.write "default" {
   endpoint {
     url = "http://loki:3100/loki/api/v1/push"
   }
 }
 
-// ================= 指标配置 (修正版) =================
-// 直接在 scrape 组件中内联 targets，精准指定 LGTM 组件的指标地址，无需 discovery.static
-prometheus.scrape "lgtm" {
-  targets = [
-    {"__address__" = "mimir:9009",   "job" = "lgtm-mimir"},
-    {"__address__" = "loki:3100",    "job" = "lgtm-loki"},
-    {"__address__" = "tempo:3200",   "job" = "lgtm-tempo"},
-    {"__address__" = "alloy:12345",  "job" = "lgtm-alloy"},
-  ]
-  forward_to = [prometheus.remote_write.mimir.receiver]
-  scrape_interval = "15s"
-}
+// ======================================================
+// OTLP Receiver
+// ======================================================
 
-prometheus.remote_write "mimir" {
-  endpoint {
-    url = "http://mimir:9009/api/v1/push"
-  }
-}
-
-// ================= 链路追踪配置 =================
 otelcol.receiver.otlp "default" {
+
   grpc {
     endpoint = "0.0.0.0:4317"
   }
+
   http {
     endpoint = "0.0.0.0:4318"
   }
 
   output {
-    traces = [otelcol.processor.batch.default.input]
+
+    traces = [
+      otelcol.processor.batch.default.input,
+    ]
+
+    metrics = [
+      otelcol.exporter.prometheus.metrics.input,
+    ]
   }
 }
 
-// 批量处理器，提高发送效率
+// ======================================================
+// Batch
+// ======================================================
+
 otelcol.processor.batch "default" {
+
   output {
-    traces = [otelcol.exporter.otlp.tempo.input]
+
+    traces = [
+      otelcol.exporter.otlp.tempo.input,
+    ]
   }
 }
+
+// ======================================================
+// Trace -> Tempo
+// ======================================================
 
 otelcol.exporter.otlp "tempo" {
+
   client {
+
     endpoint = "tempo:4317"
+
     tls {
       insecure = true
     }
   }
+}
+
+// ======================================================
+// Metrics -> Prometheus Format
+// ======================================================
+
+otelcol.exporter.prometheus "metrics" {
+
+  forward_to = [
+    prometheus.remote_write.mimir.receiver,
+  ]
+
+  include_target_info = true
+  include_scope_info  = true
+}
+
+// ======================================================
+// Remote Write -> Mimir
+// ======================================================
+
+prometheus.remote_write "mimir" {
+
+  endpoint {
+
+    url = "http://mimir:9009/api/v1/push"
+  }
+}
+
+// ======================================================
+// Alloy Self Metrics
+// ======================================================
+
+prometheus.exporter.self "alloy" {}
+
+prometheus.scrape "alloy" {
+
+  targets = prometheus.exporter.self.alloy.targets
+
+  forward_to = [
+    prometheus.remote_write.mimir.receiver,
+  ]
 }
