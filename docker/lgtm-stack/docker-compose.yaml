@@ -1,0 +1,84 @@
+version: '3.8'
+
+networks:
+  middleware-net:
+    external: true # 声明使用外部已存在的网络
+
+services:
+  # === Mimir (指标) ===
+  mimir:
+    image: grafana/mimir:latest
+    container_name: lgtm-mimir
+    volumes:
+      - ./mimir/mimir.yaml:/etc/mimir/mimir.yaml
+      - mimir-data:/data
+    command: ["-config.file=/etc/mimir/mimir.yaml"]
+    ports:
+      - "9009:9009"
+    networks:
+      - middleware-net
+
+
+  # === Loki (日志) ===
+  loki:
+    image: grafana/loki:latest
+    container_name: lgtm-loki
+    command: "-config.file=/etc/loki/local-config.yaml -target=all"  # 改回用默认配置
+    ports:
+      - "3100:3100"
+    networks:
+      - middleware-net
+
+  # === Tempo (链路追踪) ===
+  tempo:
+    image: grafana/tempo:latest
+    container_name: lgtm-tempo
+    volumes:
+      - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml
+      - tempo-data:/var/tempo
+    command: "-config.file=/etc/tempo/tempo.yaml"
+    ports:
+      - "3200:3200"  # Tempo HTTP API
+    networks:
+      - middleware-net
+
+  # === Alloy (统一采集器) ===
+  alloy:
+    image: grafana/alloy:latest
+    container_name: lgtm-alloy
+    volumes:
+      - ./alloy/config.alloy:/etc/alloy/config.alloy
+      - /var/run/docker.sock:/var/run/docker.sock # 必须挂载以发现容器和读取日志
+    command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
+    ports:
+      - "12345:12345" # Alloy UI
+      - "4317:4317"   # OTLP gRPC (应用通过此端口发送追踪)
+      - "4318:4318"   # OTLP HTTP
+    depends_on:
+      - mimir
+      - loki
+      - tempo
+    networks:
+      - middleware-net
+
+  # === Grafana (可视化) ===
+  grafana:
+    image: grafana/grafana:latest
+    container_name: lgtm-grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin # 默认密码 admin
+    volumes:
+      # 挂载 provisioning 配置目录，自动配置数据源，避免 YAML-in-YAML 解析报错
+      - ./grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mimir
+      - loki
+      - tempo
+    networks:
+      - middleware-net
+
+volumes:
+  mimir-data:
+  tempo-data:
