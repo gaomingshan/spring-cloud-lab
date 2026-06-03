@@ -41,11 +41,15 @@ otelcol.receiver.otlp "default" {
     metrics = [
       otelcol.exporter.prometheus.metrics.input,
     ]
+
+    logs = [
+      otelcol.processor.batch.default.input,
+    ]
   }
 }
 
 // ======================================================
-// Batch
+// Batch Processor
 // ======================================================
 
 otelcol.processor.batch "default" {
@@ -54,6 +58,10 @@ otelcol.processor.batch "default" {
 
     traces = [
       otelcol.exporter.otlp.tempo.input,
+    ]
+
+    logs = [
+      otelcol.exporter.loki.otlp.input,
     ]
   }
 }
@@ -72,6 +80,17 @@ otelcol.exporter.otlp "tempo" {
       insecure = true
     }
   }
+}
+
+// ======================================================
+// OTLP Logs -> Loki
+// ======================================================
+
+otelcol.exporter.loki "otlp" {
+
+  forward_to = [
+    loki.write.default.receiver,
+  ]
 }
 
 // ======================================================
