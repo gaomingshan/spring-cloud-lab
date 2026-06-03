@@ -1,11 +1,16 @@
 server:
-  port: 8701
+  port: 8702
 spring:
   application:
     name: observability-metrics
   cloud:
     nacos:
-      server-addr: 127.0.0.1:8848
+      server-addr: 192.168.179.128:8848
+      username: nacos
+      password: nacos
+      discovery:
+        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+        group: DEFAULT_GROUP
 
 # Actuator 端点配置
 management:
