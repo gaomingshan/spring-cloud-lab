@@ -1,8 +1,8 @@
-# observability-metrics - 指标监控
+# observability-metrics - 可观测性（LGTM Stack）
 
 ## 技术栈
 
-Micrometer → Prometheus → Grafana
+Micrometer + OTel Agent → Alloy → Mimir / Loki / Tempo → Grafana
 
 ## 工作原理
 
@@ -14,12 +14,16 @@ Micrometer Registry（Prometheus 格式转换）
   │
   ▼
 /actuator/prometheus 端点
-  │ Prometheus 定时拉取（Pull 模式，默认 15s）
+  │ OTel Agent 采集（Push 模式，OTLP 协议）
   ▼
-Prometheus 时序数据库
-  │ PromQL 查询
+Alloy（统一采集器，OTLP Receiver）
+  │
+  ├── Metrics → Prometheus Remote Write → Mimir（指标存储）
+  ├── Traces → OTLP Export → Tempo（链路追踪存储）
+  └── Logs  → Docker Logs → Loki（日志聚合存储）
+  │
   ▼
-Grafana 监控大盘
+Grafana（统一可视化大盘，TraceId 串联三大支柱）
 ```
 
 ## 三种核心指标类型
@@ -40,31 +44,39 @@ Grafana 监控大盘
 ## 演示步骤
 
 ```bash
-# 1. 启动基础设施
-docker-compose up -d prometheus grafana
+# 1. 启动 LGTM Stack 基础设施
+cd docker/lgtm-stack
+docker-compose up -d
 
-# 2. 启动应用
+# 2. 启动应用（挂载 OTel Agent）
 cd lab-observability/observability-metrics
-mvn spring-boot:run
+mvn spring-boot:run \
+  -Dspring-boot.run.jvmArguments="-javaagent:路径/to/opentelemetry-javaagent.jar \
+    -Dotel.service.name=observability-metrics \
+    -Dotel.exporter.otlp.endpoint=http://localhost:4317 \
+    -Dotel.exporter.otlp.protocol=grpc \
+    -Dotel.metrics.exporter=otlp \
+    -Dotel.traces.exporter=otlp \
+    -Dotel.logs.exporter=none"
 
-# 3. 查看 Prometheus 原始指标
-curl http://localhost:8701/actuator/prometheus
+# 3. 查看 Prometheus 原始指标（仍可通过 actuator 端点查看）
+curl http://localhost:8702/actuator/prometheus
 
 # 4. 触发业务请求（生成自定义指标数据）
 # Counter + Timer
-for i in {1..20}; do curl -s -X POST http://localhost:8701/metrics/order; done
+for i in {1..20}; do curl -s -X POST http://localhost:8702/metrics/order; done
 
 # Gauge 入队/出队
-curl -X POST http://localhost:8701/metrics/queue/push
-curl -X POST http://localhost:8701/metrics/queue/push
-curl -X POST http://localhost:8701/metrics/queue/pop
+curl -X POST http://localhost:8702/metrics/queue/push
+curl -X POST http://localhost:8702/metrics/queue/push
+curl -X POST http://localhost:8702/metrics/queue/pop
 
 # 查看当前指标统计
-curl http://localhost:8701/metrics/stats
+curl http://localhost:8702/metrics/stats
 
 # 5. 查看监控大盘
-# Prometheus：http://localhost:9090（搜索 lab_order_total）
-# Grafana：  http://localhost:3000（admin/admin）
+# Grafana：  http://localhost:3000（admin/admin，数据源已自动配置 Mimir/Loki/Tempo）
+# Alloy UI： http://localhost:12345
 ```
 
 ## Grafana PromQL 示例
@@ -82,3 +94,13 @@ lab_queue_size
 # JVM 内存使用（按区域）
 jvm_memory_used_bytes{application="observability-metrics"}
 ```
+
+## LGTM Stack 组件说明
+
+| 组件 | 用途 | 端口 | 说明 |
+|------|------|------|------|
+| Mimir | 指标存储 | 9009 | Prometheus 兼容的时序数据库，支持 Remote Write |
+| Loki | 日志聚合 | 3100 | 轻量级日志存储，支持 LogQL 查询 |
+| Tempo | 链路追踪 | 3200 | 高性能 Trace 存储，支持 OTLP 接收 |
+| Alloy | 统一采集器 | 12345 / 4317 / 4318 | Grafana Agent 升级版，统一采集 Metrics/Logs/Traces |
+| Grafana | 可视化 | 3000 | 统一大盘，Mimir/Loki/Tempo 数据源已自动 Provisioning |

@@ -11,11 +11,9 @@
     <artifactId>lab-observability</artifactId>
     <packaging>pom</packaging>
     <name>lab-observability</name>
-    <description>【可观测性】三大支柱聚合模块：Metrics(Prometheus+Grafana) + Tracing(OpenTelemetry+SkyWalking) + Logging(ELK)</description>
+    <description>【可观测性】LGTM Stack：Micrometer+OTel Agent → Alloy → Mimir/Loki/Tempo → Grafana</description>
 
     <modules>
         <module>observability-metrics</module>
-        <module>observability-tracing</module>
-        <module>observability-logging</module>
     </modules>
 </project>
