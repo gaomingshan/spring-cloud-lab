@@ -18,7 +18,8 @@
         <module>lab-gateway</module>
         <module>lab-feign</module>
         <module>lab-sentinel</module>
-<!--        <module>lab-seata</module>-->
+        <module>lab-seata</module>
+        <module>lab-commerce</module>
 <!--        <module>lab-stream</module>-->
 <!--        <module>lab-sharding</module>-->
 <!--        <module>lab-multi-datasource</module>-->

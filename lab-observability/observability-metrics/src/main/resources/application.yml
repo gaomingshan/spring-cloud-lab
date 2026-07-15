@@ -5,26 +5,28 @@ spring:
     name: observability-metrics
   cloud:
     nacos:
-      server-addr: 192.168.179.128:8848
-      username: nacos
-      password: nacos
+      server-addr: ${LAB_NACOS_ADDR:127.0.0.1:8848}
+      username: ${LAB_NACOS_USERNAME:nacos}
+      password: ${LAB_NACOS_PASSWORD:nacos}
       discovery:
-        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
-        group: DEFAULT_GROUP
+        namespace: ${LAB_NACOS_NAMESPACE:}
+        group: ${LAB_NACOS_GROUP:DEFAULT_GROUP}
 
 # Actuator 端点配置
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus,metrics,env
+        include: health,info,metrics
   endpoint:
     health:
       show-details: always
-    prometheus:
-      enabled: true
   # Micrometer 公共标签（所有指标携带这些标签，便于 Grafana 按服务/环境筛选）
   metrics:
     tags:
       application: ${spring.application.name}
-      env: dev
+      environment: ${LAB_ENV:local}
+
+logging:
+  file:
+    name: ${LAB_LOG_DIR:./logs}/${spring.application.name}.log

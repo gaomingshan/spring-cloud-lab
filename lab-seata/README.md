@@ -14,8 +14,8 @@
 
 ## 二、核心能力
 
-### AT 模式（推荐，无侵入）
-- 业务代码只需加 `@GlobalTransactional`，Seata 代理数据源自动记录 undo_log
+### AT 模式（推荐，低侵入）
+- 全局事务入口使用 `@GlobalTransactional`，参与方通过 Seata 代理数据源自动记录 undo_log
 - 回滚时执行反向 SQL 补偿，对业务完全透明
 - 适用：关系型数据库，改造成本低
 
@@ -52,6 +52,8 @@ seata-order（TM）
 
 ## 五、演示步骤
 
+`docker-compose.yml` 只负责通用中间件，不包含 Seata Server。Seata TC 的注册、配置和事务元数据需要与实际 Nacos/MySQL 环境保持一致，应使用你已部署的 TC，或按 Seata 官方 Server 配置独立部署后再执行以下步骤。客户端默认通过 `LAB_NACOS_ADDR`、`LAB_SEATA_GROUP`、`LAB_SEATA_APPLICATION` 发现 TC。
+
 ```bash
 # 1. 初始化数据库
 mysql -u root -proot123 < lab-seata/sql/init.sql
@@ -61,11 +63,11 @@ mvn spring-boot:run -pl lab-seata/seata-storage
 mvn spring-boot:run -pl lab-seata/seata-account
 mvn spring-boot:run -pl lab-seata/seata-order
 
-# 3. 成功场景（三个库同时提交）
+# 3. 成功场景（三个库同时提交，订单/账户/库存均有真实 SQL 变更）
 curl -X POST "http://localhost:8300/order/create?userId=1&productId=1&count=10&money=100"
 
 # 4. 失败回滚场景（storage/account 被回滚，数据恢复原值）
 curl -X POST "http://localhost:8300/order/create-fail?userId=1&productId=1&count=10&money=100"
 
-# 5. 验证回滚效果：查看 storage.t_storage 和 account.t_account 数据未变化
+# 5. 验证回滚效果：查看 storage.t_storage、account.t_account 和 order.t_order 数据未变化
 ```

@@ -1,16 +1,18 @@
 server:
-  port: 8302
+  port: ${SEATA_STORAGE_PORT:8302}
 spring:
   application:
     name: seata-storage
   cloud:
     nacos:
-      server-addr: 127.0.0.1:8848
+      server-addr: ${LAB_NACOS_ADDR:127.0.0.1:8848}
+      username: ${LAB_NACOS_USERNAME:nacos}
+      password: ${LAB_NACOS_PASSWORD:nacos}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/seata_storage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root123
+    url: jdbc:mysql://${LAB_MYSQL_HOST:127.0.0.1}:${LAB_MYSQL_PORT:3306}/seata_storage?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${LAB_MYSQL_USERNAME:root}
+    password: ${LAB_MYSQL_PASSWORD:root123}
 seata:
   enabled: true
   application-id: ${spring.application.name}
@@ -21,11 +23,10 @@ seata:
   registry:
     type: nacos
     nacos:
-      server-addr: 127.0.0.1:8848
-      group: SEATA_GROUP
-      application: seata-server
+      server-addr: ${LAB_NACOS_ADDR:127.0.0.1:8848}
+      group: ${LAB_SEATA_GROUP:DEFAULT_GROUP}
+      application: ${LAB_SEATA_APPLICATION:seata-server}
+      username: ${LAB_NACOS_USERNAME:nacos}
+      password: ${LAB_NACOS_PASSWORD:nacos}
   config:
-    type: nacos
-    nacos:
-      server-addr: 127.0.0.1:8848
-      group: SEATA_GROUP
+    type: file

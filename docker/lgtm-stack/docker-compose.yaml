@@ -1,13 +1,11 @@
-version: '3.8'
-
 networks:
-  middleware-net:
-    external: true # 声明使用外部已存在的网络
+  lgtm-net:
+    driver: bridge
 
 services:
   # === Mimir (指标) ===
   mimir:
-    image: grafana/mimir:latest
+    image: grafana/mimir:2.13.0
     container_name: lgtm-mimir
     volumes:
       - ./mimir/mimir.yaml:/etc/mimir/mimir.yaml
@@ -16,22 +14,22 @@ services:
     ports:
       - "9009:9009"
     networks:
-      - middleware-net
+      - lgtm-net
 
 
   # === Loki (日志) ===
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.0.0
     container_name: lgtm-loki
     command: "-config.file=/etc/loki/local-config.yaml -target=all"  # 改回用默认配置
     ports:
       - "3100:3100"
     networks:
-      - middleware-net
+      - lgtm-net
 
   # === Tempo (链路追踪) ===
   tempo:
-    image: grafana/tempo:latest
+    image: grafana/tempo:2.4.1
     container_name: lgtm-tempo
     volumes:
       - ./tempo/tempo.yaml:/etc/tempo/tempo.yaml
@@ -40,15 +38,16 @@ services:
     ports:
       - "3200:3200"  # Tempo HTTP API
     networks:
-      - middleware-net
+      - lgtm-net
 
   # === Alloy (统一采集器) ===
   alloy:
-    image: grafana/alloy:latest
+    image: grafana/alloy:v1.0.0
     container_name: lgtm-alloy
     volumes:
       - ./alloy/config.alloy:/etc/alloy/config.alloy
       - /var/run/docker.sock:/var/run/docker.sock # 必须挂载以发现容器和读取日志
+      - ../../logs:/var/log/lab:ro
     command: ["run", "--server.http.listen-addr=0.0.0.0:12345", "/etc/alloy/config.alloy"]
     ports:
       - "12345:12345" # Alloy UI
@@ -59,11 +58,11 @@ services:
       - loki
       - tempo
     networks:
-      - middleware-net
+      - lgtm-net
 
   # === Grafana (可视化) ===
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:10.4.5
     container_name: lgtm-grafana
     environment:
       - GF_SECURITY_ADMIN_PASSWORD=admin # 默认密码 admin
@@ -77,7 +76,7 @@ services:
       - loki
       - tempo
     networks:
-      - middleware-net
+      - lgtm-net
 
 volumes:
   mimir-data:

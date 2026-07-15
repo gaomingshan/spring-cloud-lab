@@ -23,12 +23,12 @@ spring:
   cloud:
     nacos:
       # Nacos Server 地址（统一在此配置，discovery 和 config 共用）
-      server-addr: 192.168.179.128:8848
-      username: nacos
-      password: nacos
+      server-addr: ${LAB_NACOS_ADDR:127.0.0.1:8848}
+      username: ${LAB_NACOS_USERNAME:nacos}
+      password: ${LAB_NACOS_PASSWORD:nacos}
       config:
-        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
-        group: DEFAULT_GROUP
+        namespace: ${LAB_NACOS_NAMESPACE:}
+        group: ${LAB_NACOS_GROUP:DEFAULT_GROUP}
         file-extension: yml
 
 # Actuator 暴露 refresh 端点（手动触发配置刷新）

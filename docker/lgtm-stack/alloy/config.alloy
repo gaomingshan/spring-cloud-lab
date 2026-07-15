@@ -18,6 +18,18 @@ loki.write "default" {
   }
 }
 
+local.file_match "host_app_logs" {
+  path_targets = [{
+    __path__ = "/var/log/lab/*.log",
+    job = "spring-boot",
+  }]
+}
+
+loki.source.file "host_app_logs" {
+  targets    = local.file_match.host_app_logs.targets
+  forward_to = [loki.write.default.receiver]
+}
+
 // ======================================================
 // OTLP Receiver
 // ======================================================

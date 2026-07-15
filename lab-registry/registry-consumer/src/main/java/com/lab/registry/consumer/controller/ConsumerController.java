@@ -24,7 +24,7 @@ public class ConsumerController {
     private final RestTemplate restTemplate;
     private final DiscoveryClient discoveryClient;
 
-    private static final String PROVIDER_SERVICE = "lab-gateway/registry-provider";
+    private static final String PROVIDER_SERVICE = "registry-provider";
 
     /**
      * 通过 @LoadBalanced RestTemplate 调用 provider

@@ -1,14 +1,20 @@
 package com.lab.seata.storage.controller;
 
 import com.lab.common.result.Result;
+import com.lab.common.exception.BizException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/storage")
 public class StorageController {
+
+    private final JdbcTemplate jdbcTemplate;
 
     /**
      * 扣减库存（AT 模式参与方）
@@ -22,9 +28,15 @@ public class StorageController {
     @PostMapping("/decrease")
     @Transactional
     public Result<Void> decrease(@RequestParam Long productId,
-                                   @RequestParam Integer count) {
+                                    @RequestParam Integer count) {
         log.info("[Storage] 扣减库存: productId={}, count={}", productId, count);
-        // storageMapper.decrease(productId, count);
+        int updated = jdbcTemplate.update(
+                "UPDATE t_storage SET used = used + ?, residue = residue - ? "
+                        + "WHERE product_id = ? AND residue >= ?",
+                count, count, productId, count);
+        if (updated != 1) {
+            throw BizException.of("商品不存在或可用库存不足");
+        }
         log.info("[Storage] 扣减库存成功");
         return Result.ok();
     }

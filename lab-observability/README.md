@@ -8,9 +8,9 @@
 |------|--------|------|------|
 | Metrics（指标） | Micrometer → OTel Agent → Alloy → Mimir → Grafana | 8702 | 系统/业务指标监控大盘 |
 | Tracing（链路追踪） | OTel Agent → Alloy(OTLP) → Tempo → Grafana | 8702 | 跨服务调用链路可视化 |
-| Logging（日志） | Logback → Docker → Alloy(Docker Logs) → Loki → Grafana | 8702 | 结构化日志聚合检索 |
+| Logging（日志） | Logback 文件 → Alloy(File + Docker Logs) → Loki → Grafana | 8702 | 结构化日志聚合检索 |
 
-三者通过 **TraceId** 在 Grafana 中无缝串联：Loki 按 TraceId 检索日志 → Tempo 查看对应链路图 → Mimir 观察对应时间段指标。
+三者通过 **TraceId** 在 Grafana 中无缝串联：Loki 按 TraceId 检索日志 → Tempo 查看对应链路图 → Mimir 观察对应时间段指标。LGTM 是本项目唯一的默认可观测性技术栈；根目录遗留的 Prometheus、SkyWalking 与 ELK Compose 配置不再作为运行主线。
 
 ---
 
@@ -81,8 +81,7 @@ mvn spring-boot:run \
     -Dotel.exporter.otlp.endpoint=http://localhost:4317 \
     -Dotel.exporter.otlp.protocol=grpc \
     -Dotel.metrics.exporter=otlp \
-    -Dotel.traces.exporter=otlp \
-    -Dotel.logs.exporter=none"
+    -Dotel.traces.exporter=otlp"
 
 # 3. 触发业务请求（生成自定义指标数据）
 # Counter + Timer
@@ -100,6 +99,8 @@ curl http://localhost:8702/metrics/stats
 # Grafana：  http://localhost:3000  (admin/admin)
 # Alloy UI： http://localhost:12345
 ```
+
+本机启动的服务通过 `logging.file.name=${LAB_LOG_DIR:./logs}/...` 写入仓库根目录的 `logs/`。Alloy 将该目录以只读卷挂载到 `/var/log/lab` 后采集；OTel Java Agent 负责 traces 和 metrics，并将 `trace_id` 写入 MDC 供日志关联。普通 Logback 日志不会仅因设置 `otel.logs.exporter=otlp` 自动变成 OTLP Log Records，因此默认不设置该参数。
 
 ---
 

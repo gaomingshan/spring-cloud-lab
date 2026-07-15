@@ -1,36 +1,36 @@
 server:
-  port: 8300
+  port: ${SEATA_ORDER_PORT:8300}
 
 spring:
   application:
     name: seata-order
   cloud:
     nacos:
-      server-addr: 127.0.0.1:8848
+      server-addr: ${LAB_NACOS_ADDR:127.0.0.1:8848}
+      username: ${LAB_NACOS_USERNAME:nacos}
+      password: ${LAB_NACOS_PASSWORD:nacos}
       discovery:
         group: DEFAULT_GROUP
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/seata_order?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
-    username: root
-    password: root123
+    url: jdbc:mysql://${LAB_MYSQL_HOST:127.0.0.1}:${LAB_MYSQL_PORT:3306}/seata_order?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: ${LAB_MYSQL_USERNAME:root}
+    password: ${LAB_MYSQL_PASSWORD:root123}
 
-# Seata 配置
 seata:
   enabled: true
   application-id: ${spring.application.name}
-  tx-service-group: my_tx_group          # 事务组名（需与 Seata Server 配置一致）
+  tx-service-group: my_tx_group
   service:
     vgroup-mapping:
-      my_tx_group: default               # 事务组 -> Seata Server 集群映射
+      my_tx_group: default
   registry:
-    type: nacos                          # Seata Server 注册到 Nacos
+    type: nacos
     nacos:
-      server-addr: 127.0.0.1:8848
-      group: SEATA_GROUP
-      application: seata-server
+      server-addr: ${LAB_NACOS_ADDR:127.0.0.1:8848}
+      group: ${LAB_SEATA_GROUP:DEFAULT_GROUP}
+      application: ${LAB_SEATA_APPLICATION:seata-server}
+      username: ${LAB_NACOS_USERNAME:nacos}
+      password: ${LAB_NACOS_PASSWORD:nacos}
   config:
-    type: nacos                          # Seata 配置中心
-    nacos:
-      server-addr: 127.0.0.1:8848
-      group: SEATA_GROUP
+    type: file
