@@ -2,10 +2,11 @@ package com.lab.seata.order.service;
 
 import com.lab.seata.order.client.AccountClient;
 import com.lab.seata.order.client.StorageClient;
+import com.lab.seata.order.entity.Order;
+import com.lab.seata.order.mapper.OrderMapper;
 import io.seata.spring.annotation.GlobalTransactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,7 +19,7 @@ public class OrderService {
 
     private final AccountClient accountClient;
     private final StorageClient storageClient;
-    private final JdbcTemplate jdbcTemplate;
+    private final OrderMapper orderMapper;
 
     /**
      * AT 模式分布式事务
@@ -40,8 +41,7 @@ public class OrderService {
 
         // 3. 本地保存订单，作为 Seata AT 的一个分支事务。
         log.info("[Order] 步骤3: 创建订单记录");
-        jdbcTemplate.update("INSERT INTO t_order (user_id, product_id, count, money, status) VALUES (?, ?, ?, ?, 1)",
-                userId, productId, count, money);
+        orderMapper.insert(newOrder(userId, productId, count, money, 1));
 
         log.info("[Order] 下单成功，全局事务提交");
     }
@@ -56,11 +56,20 @@ public class OrderService {
 
         storageClient.decrease(productId, count);
         accountClient.decrease(userId, money);
-        jdbcTemplate.update("INSERT INTO t_order (user_id, product_id, count, money, status) VALUES (?, ?, ?, ?, 0)",
-                userId, productId, count, money);
+        orderMapper.insert(newOrder(userId, productId, count, money, 0));
 
         // 模拟异常 → 触发全局回滚
         log.info("[Order-Fail] 模拟业务异常，触发全局回滚...");
         throw new RuntimeException("模拟异常：触发 Seata 全局回滚");
+    }
+
+    private Order newOrder(Long userId, Long productId, Integer count, BigDecimal money, int status) {
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setProductId(productId);
+        order.setCount(count);
+        order.setMoney(money);
+        order.setStatus(status);
+        return order;
     }
 }

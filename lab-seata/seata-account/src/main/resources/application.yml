@@ -30,3 +30,6 @@ seata:
       password: ${LAB_NACOS_PASSWORD:nacos}
   config:
     type: file
+
+mybatis-flex:
+  mapper-locations: classpath:/mapper/*.xml

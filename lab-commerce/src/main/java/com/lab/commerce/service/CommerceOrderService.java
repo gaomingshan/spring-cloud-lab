@@ -6,63 +6,59 @@ import com.lab.common.exception.BizException;
 import com.lab.commerce.client.AccountClient;
 import com.lab.commerce.client.StorageClient;
 import com.lab.commerce.controller.CommerceOrderController.CreateOrderRequest;
+import com.lab.commerce.dto.CommerceOrderView;
+import com.lab.commerce.dto.OutboxEventView;
+import com.lab.commerce.entity.CommerceOrder;
+import com.lab.commerce.entity.OutboxEvent;
+import com.lab.commerce.mapper.CommerceOrderMapper;
+import com.lab.commerce.mapper.OutboxEventMapper;
 import io.seata.spring.annotation.GlobalTransactional;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cloud.stream.function.StreamBridge;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CommerceOrderService {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final CommerceOrderMapper commerceOrderMapper;
+    private final OutboxEventMapper outboxEventMapper;
     private final AccountClient accountClient;
     private final StorageClient storageClient;
     private final ObjectMapper objectMapper;
-    private final StreamBridge streamBridge;
 
     @GlobalTransactional(name = "commerce-create-order", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> create(CreateOrderRequest request) {
+    public CommerceOrderView create(CreateOrderRequest request) {
         return createInternal(request, false);
     }
 
     @GlobalTransactional(name = "commerce-create-order-fail", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> createAndRollback(CreateOrderRequest request) {
+    public CommerceOrderView createAndRollback(CreateOrderRequest request) {
         return createInternal(request, true);
     }
 
-    private Map<String, Object> createInternal(CreateOrderRequest request, boolean forceRollback) {
-        Map<String, Object> existing = findOptional(request.requestId());
-        if (existing != null) {
-            return existing;
+    private CommerceOrderView createInternal(CreateOrderRequest request, boolean forceRollback) {
+        if (commerceOrderMapper.reserve(request.requestId(), request.userId(), request.productId(), request.count(), request.money()) == 0) {
+            return find(request.requestId());
         }
 
         storageClient.decrease(request.productId(), request.count());
         accountClient.decrease(request.userId(), request.money());
 
-        try {
-            jdbcTemplate.update("INSERT INTO t_commerce_order (request_id, user_id, product_id, count, money, status) "
-                            + "VALUES (?, ?, ?, ?, ?, 'CREATED')",
-                    request.requestId(), request.userId(), request.productId(), request.count(), request.money());
-        } catch (DuplicateKeyException exception) {
-            return find(request.requestId());
-        }
-
-        jdbcTemplate.update("INSERT INTO t_outbox_event (aggregate_type, aggregate_id, event_type, payload) "
-                        + "VALUES ('ORDER', ?, 'ORDER_CREATED', ?)",
-                request.requestId(), eventPayload(request));
+        OutboxEvent event = new OutboxEvent();
+        event.setAggregateType("ORDER");
+        event.setAggregateId(request.requestId());
+        event.setEventType("ORDER_CREATED");
+        event.setPayload(eventPayload(request));
+        event.setStatus("PENDING");
+        event.setRetryCount(0);
+        outboxEventMapper.insert(event);
+        commerceOrderMapper.markCreated(request.requestId());
 
         if (forceRollback) {
             throw BizException.of("故障注入：验证 Seata 全局回滚与 Outbox 原子性");
@@ -70,42 +66,17 @@ public class CommerceOrderService {
         return find(request.requestId());
     }
 
-    public Map<String, Object> find(String requestId) {
-        Map<String, Object> order = findOptional(requestId);
+    public CommerceOrderView find(String requestId) {
+        CommerceOrder order = commerceOrderMapper.selectByRequestId(requestId);
         if (order == null) {
             throw BizException.of("订单不存在");
         }
-        List<Map<String, Object>> events = jdbcTemplate.queryForList(
-                "SELECT id, event_type, status, retry_count, created_at, published_at "
-                        + "FROM t_outbox_event WHERE aggregate_id = ? ORDER BY id", requestId);
-        order.put("outboxEvents", events);
-        return order;
-    }
-
-    @Scheduled(fixedDelayString = "${commerce.outbox.publish-delay-ms:2000}")
-    public void publishPendingEvents() {
-        List<Map<String, Object>> events = jdbcTemplate.queryForList(
-                "SELECT id, payload FROM t_outbox_event WHERE status = 'PENDING' ORDER BY id LIMIT 50");
-        for (Map<String, Object> event : events) {
-            Long id = ((Number) event.get("id")).longValue();
-            try {
-                boolean sent = streamBridge.send("orderEvent-out-0", event.get("payload"));
-                if (!sent) {
-                    throw new IllegalStateException("RocketMQ Binder rejected the event");
-                }
-                jdbcTemplate.update("UPDATE t_outbox_event SET status = 'PUBLISHED', published_at = NOW() WHERE id = ?", id);
-            } catch (Exception exception) {
-                jdbcTemplate.update("UPDATE t_outbox_event SET retry_count = retry_count + 1 WHERE id = ?", id);
-                log.warn("Outbox event {} was not published and will be retried", id, exception);
-            }
-        }
-    }
-
-    private Map<String, Object> findOptional(String requestId) {
-        List<Map<String, Object>> orders = jdbcTemplate.queryForList(
-                "SELECT id, request_id, user_id, product_id, count, money, status, created_at "
-                        + "FROM t_commerce_order WHERE request_id = ?", requestId);
-        return orders.isEmpty() ? null : new LinkedHashMap<>(orders.get(0));
+        List<OutboxEventView> events = outboxEventMapper.selectByAggregateId(requestId).stream()
+                .map(event -> new OutboxEventView(event.getId(), event.getEventType(), event.getStatus(),
+                        event.getRetryCount(), event.getCreatedAt(), event.getPublishedAt()))
+                .toList();
+        return new CommerceOrderView(order.getId(), order.getRequestId(), order.getUserId(), order.getProductId(),
+                order.getCount(), order.getMoney(), order.getStatus(), order.getCreatedAt(), events);
     }
 
     private String eventPayload(CreateOrderRequest request) {

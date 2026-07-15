@@ -43,6 +43,9 @@ seata:
   config:
     type: file
 
+mybatis-flex:
+  mapper-locations: classpath:/mapper/*.xml
+
 management:
   endpoints:
     web:

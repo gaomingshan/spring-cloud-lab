@@ -102,7 +102,12 @@ CREATE TABLE IF NOT EXISTS `t_outbox_event` (
     `payload` JSON NOT NULL,
     `status` VARCHAR(16) NOT NULL DEFAULT 'PENDING',
     `retry_count` INT NOT NULL DEFAULT 0,
+    `processing_token` VARCHAR(64) NULL,
+    `processing_until` DATETIME NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `published_at` DATETIME NULL,
     KEY `idx_outbox_status_id` (`status`, `id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4;
+
+ALTER TABLE t_outbox_event ADD COLUMN IF NOT EXISTS `processing_token` VARCHAR(64) NULL;
+ALTER TABLE t_outbox_event ADD COLUMN IF NOT EXISTS `processing_until` DATETIME NULL;
