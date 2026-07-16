@@ -14,6 +14,11 @@
     <dependencies>
         <dependency>
             <groupId>com.lab</groupId>
+            <artifactId>foundation-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lab</groupId>
             <artifactId>governance-contract</artifactId>
             <version>${project.version}</version>
         </dependency>

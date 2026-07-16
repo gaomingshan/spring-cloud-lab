@@ -12,4 +12,11 @@
     <artifactId>platform-foundation</artifactId>
     <packaging>pom</packaging>
     <name>platform-foundation</name>
+    <modules>
+        <module>foundation-contract</module>
+        <module>foundation-context</module>
+        <module>foundation-id</module>
+        <module>foundation-idempotency</module>
+        <module>foundation-starter</module>
+    </modules>
 </project>

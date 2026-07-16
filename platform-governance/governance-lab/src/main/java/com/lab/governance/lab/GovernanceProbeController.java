@@ -1,5 +1,7 @@
 package com.lab.governance.lab;
 
+import com.lab.foundation.context.RequestContextHolder;
+import com.lab.foundation.contract.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -13,7 +15,9 @@ public class GovernanceProbeController {
     }
 
     @GetMapping("/governance/probe")
-    public AppProperties probe() {
-        return appProperties;
+    public ApiResponse<AppProperties> probe() {
+        var context = RequestContextHolder.get();
+        var traceId = context == null ? null : context.traceId();
+        return ApiResponse.success(appProperties, traceId);
     }
 }
