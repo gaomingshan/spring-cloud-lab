@@ -1,67 +1,60 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.lab</groupId>
     <artifactId>spring-cloud-lab</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
+
     <name>spring-cloud-lab</name>
-    <description>微服务治理能力学习实验室 - Maven 多模块项目</description>
+    <description>Spring Cloud Alibaba distributed technology verification laboratory</description>
 
     <modules>
+        <module>platform-foundation</module>
+        <module>platform-governance</module>
+        <module>platform-message</module>
+        <module>platform-cache</module>
+        <module>platform-coordination</module>
+        <module>platform-data</module>
+        <module>platform-security</module>
+        <module>platform-observability</module>
+        <module>platform-fault</module>
+        <module>capability-command</module>
+        <module>capability-reliable-message</module>
+        <module>capability-cache-consistency</module>
+        <module>capability-transaction</module>
+        <module>capability-saga</module>
+        <module>capability-resilience</module>
+        <module>capability-scheduler</module>
+        <module>capability-data-projection</module>
+        <module>scenarios</module>
     </modules>
 
     <properties>
-        <!-- 运行环境 -->
-        <java.version>17</java.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <java.version>21</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <spring-boot.version>3.2.5</spring-boot.version>
-        <spring-cloud.version>2023.0.1</spring-cloud.version>
-        <spring-cloud-alibaba.version>2023.0.1.0</spring-cloud-alibaba.version>
+        <spring-boot.version>3.5.9</spring-boot.version>
+        <spring-cloud.version>2025.0.0</spring-cloud.version>
+        <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
 
-        <!-- 数据层（非 Spring Boot BOM 管理，需显式声明版本）-->
-        <mybatis-flex.version>1.9.3</mybatis-flex.version>
-        <shardingsphere.version>5.4.1</shardingsphere.version>
-        <redisson.version>3.29.0</redisson.version>
-        <!-- mysql-connector-j 由 Spring Boot BOM 管理（3.2.x→8.3.0），不在此覆盖 -->
+        <redisson.version>4.0.0</redisson.version>
+        <toxiproxy-java.version>2.1.7</toxiproxy-java.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
+        <lombok.version>1.18.38</lombok.version>
 
-        <!-- 流控熔断（非 BOM 管理）-->
-        <sentinel.version>1.8.8</sentinel.version>
-        <!-- 分布式事务 -->
-        <seata.version>2.0.0</seata.version>
-        <!-- 任务调度 -->
-        <xxl-job.version>2.4.1</xxl-job.version>
-        <!-- 认证鉴权 -->
-        <sa-token.version>1.38.0</sa-token.version>
-        <jbcrypt.version>0.4</jbcrypt.version>
-        <!-- 可观测性（logstash-logback-encoder 非 BOM 管理；micrometer 由 Spring Boot BOM 管理）-->
-        <logstash-encoder.version>7.4</logstash-encoder.version>
-        <opentelemetry.version>1.36.0</opentelemetry.version>
-        <opentelemetry-semconv.version>1.23.1-alpha</opentelemetry-semconv.version>
-
-        <!-- 工具库 -->
-        <lombok.version>1.18.32</lombok.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
-        <easyexcel.version>3.3.4</easyexcel.version>
-        <transmittable-thread-local.version>2.14.5</transmittable-thread-local.version>
-        <owasp-encoder.version>1.3.1</owasp-encoder.version>
-        <hutool.version>5.8.27</hutool.version>
-
-        <!-- Maven 插件 -->
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
+        <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
+        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- ① Spring Boot BOM -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -69,7 +62,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- ② Spring Cloud BOM -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -77,7 +69,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <!-- ③ Spring Cloud Alibaba BOM -->
             <dependency>
                 <groupId>com.alibaba.cloud</groupId>
                 <artifactId>spring-cloud-alibaba-dependencies</artifactId>
@@ -86,214 +77,87 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- ④ 项目公共模块 -->
-            <dependency>
-                <groupId>com.lab</groupId>
-                <artifactId>lab-common</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <!-- ⑤ 数据层（非 BOM 管理，需显式指定版本）-->
-            <dependency>
-                <groupId>com.mybatis-flex</groupId>
-                <artifactId>mybatis-flex-spring-boot3-starter</artifactId>
-                <version>${mybatis-flex.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.shardingsphere</groupId>
-                <artifactId>shardingsphere-jdbc</artifactId>
-                <version>${shardingsphere.version}</version>
-            </dependency>
             <dependency>
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redisson.version}</version>
             </dependency>
-
-            <!-- ⑥ 流控熔断 -->
             <dependency>
-                <groupId>com.alibaba.csp</groupId>
-                <artifactId>sentinel-core</artifactId>
-                <version>${sentinel.version}</version>
-            </dependency>
-
-            <!-- ⑦ 分布式事务 -->
-            <dependency>
-                <groupId>io.seata</groupId>
-                <artifactId>seata-spring-boot-starter</artifactId>
-                <version>${seata.version}</version>
-            </dependency>
-
-            <!-- ⑧ 任务调度 -->
-            <dependency>
-                <groupId>com.xuxueli</groupId>
-                <artifactId>xxl-job-core</artifactId>
-                <version>${xxl-job.version}</version>
-            </dependency>
-
-            <!-- ⑨ 认证鉴权 -->
-            <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-spring-boot3-starter</artifactId>
-                <version>${sa-token.version}</version>
+                <groupId>eu.rekawek.toxiproxy</groupId>
+                <artifactId>toxiproxy-java</artifactId>
+                <version>${toxiproxy-java.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-reactor-spring-boot3-starter</artifactId>
-                <version>${sa-token.version}</version>
+                <groupId>org.mapstruct</groupId>
+                <artifactId>mapstruct</artifactId>
+                <version>${mapstruct.version}</version>
             </dependency>
             <dependency>
-                <groupId>cn.dev33</groupId>
-                <artifactId>sa-token-redis-jackson</artifactId>
-                <version>${sa-token.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.mindrot</groupId>
-                <artifactId>jbcrypt</artifactId>
-                <version>${jbcrypt.version}</version>
-            </dependency>
-
-            <!-- ⑩ 可观测性 -->
-            <dependency>
-                <groupId>net.logstash.logback</groupId>
-                <artifactId>logstash-logback-encoder</artifactId>
-                <version>${logstash-encoder.version}</version>
-            </dependency>
-            <!-- OpenTelemetry BOM -->
-            <dependency>
-                <groupId>io.opentelemetry</groupId>
-                <artifactId>opentelemetry-bom</artifactId>
-                <version>${opentelemetry.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <!-- OpenTelemetry Semantic Conventions -->
-            <dependency>
-                <groupId>io.opentelemetry.semconv</groupId>
-                <artifactId>opentelemetry-semconv</artifactId>
-                <version>${opentelemetry-semconv.version}</version>
-            </dependency>
-
-            <!-- ⑪ 工具库 -->
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>easyexcel</artifactId>
-                <version>${easyexcel.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>transmittable-thread-local</artifactId>
-                <version>${transmittable-thread-local.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.owasp.encoder</groupId>
-                <artifactId>encoder</artifactId>
-                <version>${owasp-encoder.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>cn.hutool</groupId>
-                <artifactId>hutool-all</artifactId>
-                <version>${hutool.version}</version>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
-    <!-- 所有子模块共享的依赖 -->
-    <dependencies>
-        <!-- Lombok：编译期注解处理，provided 不打入 JAR -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <version>${lombok.version}</version>
-            <scope>provided</scope>
-        </dependency>
-        <!-- MapStruct 运行时 JAR（生成的 Mapper 实现类依赖此包，必须打入 JAR）-->
-        <!-- 注意：mapstruct-processor 只放在 annotationProcessorPaths，不在此声明，避免 APT 冲突 -->
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
-
     <build>
-        <!--
-            maven-compiler-plugin 放在 <plugins>（非 pluginManagement）：
-            所有子模块直接继承此配置，APT（Lombok + MapStruct）自动生效，无需子模块重复声明。
-            spring-boot-maven-plugin 放在 pluginManagement：
-            只有显式引用它的子模块（可执行 JAR）才会触发 repackage，
-            lab-common 等纯库模块不受影响。
-        -->
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven-compiler-plugin.version}</version>
+                    <configuration>
+                        <release>${maven.compiler.release}</release>
+                        <parameters>true</parameters>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven-surefire-plugin.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
         <plugins>
-            <!-- 编译插件：所有子模块继承，Lombok + MapStruct APT 全局生效 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <compilerArgs>
-                        <arg>-parameters</arg>
-                    </compilerArgs>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                            <version>${lombok.version}</version>
-                        </path>
-                        <path>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok-mapstruct-binding</artifactId>
-                            <version>0.2.0</version>
-                        </path>
-                        <path>
-                            <groupId>org.mapstruct</groupId>
-                            <artifactId>mapstruct-processor</artifactId>
-                            <version>${mapstruct.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
+                    <release>${maven.compiler.release}</release>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
-            <!-- 单元测试 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-surefire-plugin.version}</version>
-                <configuration>
-                    <skipTests>false</skipTests>
-                </configuration>
             </plugin>
-        </plugins>
-
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${spring-boot.version}</version>
-                    <configuration>
-                        <excludes>
-                            <exclude>
-                                <groupId>org.projectlombok</groupId>
-                                <artifactId>lombok</artifactId>
-                            </exclude>
-                        </excludes>
-                    </configuration>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                    <version>${maven-enforcer-plugin.version}</version>
                     <executions>
                         <execution>
+                            <id>enforce-build-baseline</id>
                             <goals>
-                                <goal>repackage</goal>
+                                <goal>enforce</goal>
                             </goals>
+                            <configuration>
+                                <rules>
+                                    <requireJavaVersion>
+                                        <version>[21,22)</version>
+                                    </requireJavaVersion>
+                                    <requireMavenVersion>
+                                        <version>[3.9,)</version>
+                                    </requireMavenVersion>
+                                </rules>
+                                <fail>true</fail>
+                            </configuration>
                         </execution>
                     </executions>
                 </plugin>
-            </plugins>
-        </pluginManagement>
+        </plugins>
     </build>
 </project>
