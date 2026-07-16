@@ -12,20 +12,6 @@
     <description>微服务治理能力学习实验室 - Maven 多模块项目</description>
 
     <modules>
-        <module>lab-common</module>
-        <module>lab-config-center</module>
-        <module>lab-registry</module>
-        <module>lab-gateway</module>
-        <module>lab-feign</module>
-        <module>lab-sentinel</module>
-        <module>lab-seata</module>
-        <module>lab-commerce</module>
-<!--        <module>lab-stream</module>-->
-<!--        <module>lab-sharding</module>-->
-<!--        <module>lab-multi-datasource</module>-->
-        <module>lab-observability</module>
-<!--        <module>lab-xxljob</module>-->
-<!--        <module>lab-security</module>-->
     </modules>
 
     <properties>
