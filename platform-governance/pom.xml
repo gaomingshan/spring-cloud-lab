@@ -15,11 +15,11 @@
 
     <modules>
         <module>governance-contract</module>
-        <module>nacos-config-starter</module>
-        <module>nacos-discovery-starter</module>
-        <module>gateway-starter</module>
-        <module>rpc-openfeign-starter</module>
-        <module>sentinel-starter</module>
+        <module>config-center-starter</module>
+        <module>service-discovery-starter</module>
+        <module>gateway-governance-starter</module>
+        <module>feign-governance-starter</module>
+        <module>sentinel-governance-starter</module>
         <module>governance-lab</module>
     </modules>
 </project>

@@ -6,6 +6,21 @@ spring:
       - nacos:common-dev.yml?group=DEFAULT_GROUP&refreshEnabled=true
       - nacos:management.yml?group=DEFAULT_GROUP&refreshEnabled=true
   cloud:
+    openfeign:
+      httpclient:
+        hc5:
+          enabled: true
+      client:
+        config:
+          default:
+            connectTimeout: 3000
+            readTimeout: 10000
+            loggerLevel: basic
+    sentinel:
+      eager: true
+    alibaba:
+      sentinel:
+        eager: true
     nacos:
       server-addr: 192.168.179.128:8848
       username: ${NACOS_USERNAME}
@@ -20,6 +35,29 @@ spring:
         namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
         group: DEFAULT_GROUP
         file-extension: yaml
+
+feign:
+  sentinel:
+    enabled: true
+
+lab:
+  governance:
+    config:
+      enabled: true
+      namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+      server-addr: ${spring.cloud.nacos.server-addr}
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+    discovery:
+      enabled: true
+      namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+      server-addr: ${spring.cloud.nacos.server-addr}
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+    sentinel:
+      enabled: true
+      nacos:
+        enabled: false
 
 management:
   endpoints:

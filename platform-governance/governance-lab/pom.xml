@@ -13,23 +13,18 @@
     <name>governance-lab</name>
     <dependencies>
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>gateway-starter</artifactId>
+            <artifactId>gateway-governance-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>rpc-openfeign-starter</artifactId>
+            <artifactId>feign-governance-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>sentinel-starter</artifactId>
+            <artifactId>sentinel-governance-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -44,12 +39,12 @@
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>nacos-config-starter</artifactId>
+            <artifactId>config-center-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>nacos-discovery-starter</artifactId>
+            <artifactId>service-discovery-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
