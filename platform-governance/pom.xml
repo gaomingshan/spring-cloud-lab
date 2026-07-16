@@ -17,6 +17,11 @@
         <module>governance-contract</module>
         <module>nacos-config-starter</module>
         <module>nacos-discovery-starter</module>
+        <module>gateway-starter</module>
+        <module>rpc-openfeign-starter</module>
+        <module>sentinel-starter</module>
         <module>governance-lab</module>
+        <module>gateway-lab</module>
+        <module>rpc-lab</module>
     </modules>
 </project>

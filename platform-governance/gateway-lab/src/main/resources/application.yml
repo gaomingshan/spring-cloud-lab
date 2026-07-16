@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: lab-gateway
+  config:
+    import:
+      - nacos:lab-gateway-dev.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - nacos:management.yml?group=DEFAULT_GROUP&refreshEnabled=true
+  cloud:
+    nacos:
+      server-addr: 192.168.179.128:8848
+      username: ${NACOS_USERNAME}
+      password: ${NACOS_PASSWORD}
+      discovery:
+        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+        group: DEFAULT_GROUP
+        metadata:
+          version: 0.1.0
+          capability: gateway
+      config:
+        namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+        group: DEFAULT_GROUP
+    sentinel:
+      eager: true
+      transport:
+        dashboard: 192.168.179.128:8080
+        port: 8719
+      datasource:
+        gw-flow:
+          nacos:
+            server-addr: 192.168.179.128:8848
+            username: ${NACOS_USERNAME}
+            password: ${NACOS_PASSWORD}
+            namespace: 85baacbf-ae17-4c72-9a35-348679962b0e
+            group-id: DEFAULT_GROUP
+            data-id: lab-gateway-gw-flow-rules
+            rule-type: gw-flow
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
