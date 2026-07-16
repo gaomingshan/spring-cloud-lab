@@ -14,6 +14,21 @@
     <dependencies>
         <dependency>
             <groupId>com.lab</groupId>
+            <artifactId>gateway-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lab</groupId>
+            <artifactId>rpc-openfeign-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lab</groupId>
+            <artifactId>sentinel-starter</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lab</groupId>
             <artifactId>foundation-starter</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -34,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-web</artifactId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -48,7 +63,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>${spring-boot.version}</version>
                 <configuration>
-                    <mainClass>com.lab.governance.lab.GovernanceLabApplication</mainClass>
+                <mainClass>com.lab.governance.lab.GovernanceLabApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>
