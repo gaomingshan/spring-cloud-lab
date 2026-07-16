@@ -5,6 +5,7 @@ import com.lab.foundation.contract.ApiError;
 import com.lab.foundation.contract.ApiResponse;
 import com.lab.foundation.contract.BusinessException;
 import com.lab.foundation.contract.ErrorCategory;
+import lombok.RequiredArgsConstructor;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class FoundationExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)

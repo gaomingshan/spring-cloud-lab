@@ -13,6 +13,11 @@
     <name>governance-lab</name>
     <dependencies>
         <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>com.lab</groupId>
             <artifactId>gateway-starter</artifactId>
             <version>${project.version}</version>
