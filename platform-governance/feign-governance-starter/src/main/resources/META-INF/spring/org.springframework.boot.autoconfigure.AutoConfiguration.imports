@@ -1,1 +1,2 @@
 com.lab.governance.feign.FeignAutoConfiguration
+com.lab.governance.feign.FeignHttpClientConfiguration

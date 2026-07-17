@@ -5,6 +5,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.config.HttpClientCustomizer;
+import io.netty.channel.ChannelOption;
 import com.lab.foundation.context.RequestContext;
 import com.lab.foundation.context.RequestContextHolder;
 import org.springframework.context.annotation.Bean;
@@ -22,13 +24,29 @@ public class GatewayAutoConfiguration {
             var requestId = exchange.getRequest().getHeaders().getFirst(properties.getRequestIdHeader());
             var value = requestId == null || requestId.isBlank() ? java.util.UUID.randomUUID().toString() : requestId;
             var headers = exchange.getRequest().getHeaders();
-            RequestContextHolder.set(new RequestContext(value, headers.getFirst("X-Trace-Id"),
-                    headers.getFirst("X-Span-Id"), headers.getFirst("X-Tenant-Id"), headers.getFirst("X-Principal-Id")));
+            var context = new RequestContext(value, headers.getFirst("X-Trace-Id"),
+                    headers.getFirst("X-Span-Id"), headers.getFirst("X-Tenant-Id"), headers.getFirst("X-Principal-Id"));
             var request = exchange.getRequest().mutate().header(properties.getRequestIdHeader(), value).build();
             var response = exchange.getResponse();
             response.getHeaders().set(properties.getRequestIdHeader(), value);
-            return chain.filter(exchange.mutate().request(request).build())
-                    .doFinally(signal -> RequestContextHolder.clear());
+            return Mono.deferContextual(reactorContext -> {
+                        RequestContextHolder.set(reactorContext.getOrDefault(
+                                RequestContextHolder.REACTOR_CONTEXT_KEY, context));
+                        return chain.filter(exchange.mutate().request(request).build())
+                                .doFinally(signal -> RequestContextHolder.clear());
+                    })
+                    .contextWrite(reactorContext -> reactorContext.put(
+                            RequestContextHolder.REACTOR_CONTEXT_KEY, context));
         };
+    }
+
+    @Bean
+    @ConditionalOnMissingBean
+    HttpClientCustomizer governanceGatewayHttpClientCustomizer(GatewayProperties properties) {
+        return httpClient -> httpClient
+                .responseTimeout(properties.getDefaultResponseTimeout())
+                .tcpConfiguration(tcpClient -> tcpClient.option(
+                        ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                        Math.toIntExact(properties.getDefaultConnectTimeout().toMillis())));
     }
 }

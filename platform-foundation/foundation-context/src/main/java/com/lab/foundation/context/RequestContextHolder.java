@@ -2,6 +2,8 @@ package com.lab.foundation.context;
 
 public final class RequestContextHolder {
 
+    public static final String REACTOR_CONTEXT_KEY = RequestContextHolder.class.getName();
+
     private static final ThreadLocal<RequestContext> CURRENT = new ThreadLocal<>();
 
     private RequestContextHolder() {

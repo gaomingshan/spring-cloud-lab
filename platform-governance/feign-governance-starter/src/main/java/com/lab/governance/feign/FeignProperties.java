@@ -20,6 +20,9 @@ public class FeignProperties {
     private boolean httpClient5Enabled = true;
     private int maxConnections = 200;
     private int maxConnectionsPerRoute = 50;
+    private Duration connectionTimeToLive = Duration.ofMinutes(5);
+    private Duration idleConnectionEvict = Duration.ofSeconds(30);
+    private boolean followRedirects = false;
     private Logger.Level loggerLevel = Logger.Level.BASIC;
 
 }

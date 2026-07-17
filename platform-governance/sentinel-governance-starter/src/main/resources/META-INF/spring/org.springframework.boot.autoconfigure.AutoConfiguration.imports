@@ -1,1 +1,2 @@
 com.lab.governance.sentinel.SentinelAutoConfiguration
+com.lab.governance.sentinel.SentinelFeignAutoConfiguration

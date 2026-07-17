@@ -4,10 +4,6 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import feign.Capability;
-import feign.Feign;
 import com.alibaba.csp.sentinel.datasource.nacos.NacosDataSource;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
@@ -21,20 +17,12 @@ import java.util.List;
 @AutoConfiguration
 @EnableConfigurationProperties(SentinelProperties.class)
 @ConditionalOnProperty(prefix = "lab.governance.sentinel", name = "enabled", havingValue = "true", matchIfMissing = true)
-@ConditionalOnClass({Feign.class, com.alibaba.csp.sentinel.SphU.class})
 public class SentinelAutoConfiguration {
-    @Bean
-    @ConditionalOnProperty(prefix = "lab.governance.sentinel.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
-    @ConditionalOnMissingBean
-    Capability sentinelFeignCapability(SentinelProperties properties) {
-        return new SentinelFeignCapability(properties);
-    }
-
     @Bean(destroyMethod = "close")
     @ConditionalOnProperty(prefix = "lab.governance.sentinel.nacos", name = "enabled", havingValue = "true")
     NacosDataSource<List<FlowRule>> sentinelFlowDataSource(SentinelProperties properties, ObjectMapper mapper) {
         var nacos = properties.getNacos();
-        var source = new NacosDataSource<List<FlowRule>>(nacos.getServerAddr(), nacos.getGroup(),
+        var source = new NacosDataSource<List<FlowRule>>(nacosProperties(nacos), nacos.getGroup(),
                 nacos.getFlowDataId(), converter(mapper, new TypeReference<>() {}));
         FlowRuleManager.register2Property(source.getProperty());
         return source;
@@ -44,7 +32,7 @@ public class SentinelAutoConfiguration {
     @ConditionalOnProperty(prefix = "lab.governance.sentinel.nacos", name = "enabled", havingValue = "true")
     NacosDataSource<List<DegradeRule>> sentinelDegradeDataSource(SentinelProperties properties, ObjectMapper mapper) {
         var nacos = properties.getNacos();
-        var source = new NacosDataSource<List<DegradeRule>>(nacos.getServerAddr(), nacos.getGroup(),
+        var source = new NacosDataSource<List<DegradeRule>>(nacosProperties(nacos), nacos.getGroup(),
                 nacos.getDegradeDataId(), converter(mapper, new TypeReference<>() {}));
         DegradeRuleManager.register2Property(source.getProperty());
         return source;
@@ -58,5 +46,18 @@ public class SentinelAutoConfiguration {
                 throw new IllegalArgumentException("Invalid Sentinel rule JSON", ex);
             }
         };
+    }
+
+    private java.util.Properties nacosProperties(SentinelProperties.Nacos nacos) {
+        var properties = new java.util.Properties();
+        putIfPresent(properties, "serverAddr", nacos.getServerAddr());
+        putIfPresent(properties, "namespace", nacos.getNamespace());
+        putIfPresent(properties, "username", nacos.getUsername());
+        putIfPresent(properties, "password", nacos.getPassword());
+        return properties;
+    }
+
+    private void putIfPresent(java.util.Properties properties, String key, String value) {
+        if (value != null && !value.isBlank()) properties.put(key, value);
     }
 }
