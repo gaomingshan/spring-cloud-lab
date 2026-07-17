@@ -4,6 +4,10 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import feign.Capability;
+import feign.Feign;
 import com.alibaba.csp.sentinel.datasource.nacos.NacosDataSource;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRule;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowRuleManager;
@@ -17,7 +21,15 @@ import java.util.List;
 @AutoConfiguration
 @EnableConfigurationProperties(SentinelProperties.class)
 @ConditionalOnProperty(prefix = "lab.governance.sentinel", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnClass({Feign.class, com.alibaba.csp.sentinel.SphU.class})
 public class SentinelAutoConfiguration {
+    @Bean
+    @ConditionalOnProperty(prefix = "lab.governance.sentinel.feign", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    Capability sentinelFeignCapability(SentinelProperties properties) {
+        return new SentinelFeignCapability(properties);
+    }
+
     @Bean(destroyMethod = "close")
     @ConditionalOnProperty(prefix = "lab.governance.sentinel.nacos", name = "enabled", havingValue = "true")
     NacosDataSource<List<FlowRule>> sentinelFlowDataSource(SentinelProperties properties, ObjectMapper mapper) {

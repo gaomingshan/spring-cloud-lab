@@ -29,7 +29,12 @@
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>foundation-starter</artifactId>
+            <artifactId>foundation-context</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lab</groupId>
+            <artifactId>foundation-contract</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

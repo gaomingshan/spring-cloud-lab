@@ -27,6 +27,7 @@ public class SentinelProperties {
         private String group = "DEFAULT_GROUP";
         private String flowDataId = "sentinel-flow-rules";
         private String degradeDataId = "sentinel-degrade-rules";
+        private String cluster = "DEFAULT";
     }
 
     @Getter
@@ -34,5 +35,7 @@ public class SentinelProperties {
     public static class Feign {
         private boolean enabled = true;
         private boolean fallbackEnabled = true;
+        private String contextName = "feign-outbound";
+        private String resourcePrefix = "feign:";
     }
 }
