@@ -13,14 +13,13 @@ import java.time.Duration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.stream.Collectors;
 
 public class RocketMqMessageMapper {
-    private static final Set<String> RESERVED_PROPERTIES = Set.of(
-            MessageConst.STRING_HASH_SET.stream()
-                    .map(property -> property.toLowerCase(Locale.ROOT))
-                    .collect(Collectors.toSet())
-                    .toArray(String[]::new));
+    private static final Set<String> RESERVED_PROPERTIES = reservedProperties();
     private static final Set<String> RESERVED_ENVELOPE_PROPERTIES = Set.of(
             "eventid", "eventtype", "schemaversion", "traceparent");
     private final EventSerializer serializer;
@@ -47,10 +46,10 @@ public class RocketMqMessageMapper {
         message.putUserProperty("schemaVersion", Integer.toString(event.schemaVersion()));
         if (!blank(event.traceparent())) message.putUserProperty("traceparent", event.traceparent());
         for (Map.Entry<String, String> entry : event.headers().entrySet()) {
-            putHeader(message, entry);
+            putHeader(message, entry, true);
         }
         for (Map.Entry<String, String> entry : effective.headers().entrySet()) {
-            putHeader(message, entry);
+            putHeader(message, entry, false);
         }
         if (delayLevel != null) message.setDelayTimeLevel(delayLevel);
         return message;
@@ -58,12 +57,31 @@ public class RocketMqMessageMapper {
 
     static boolean blank(String value) { return value == null || value.isBlank(); }
 
-    private void putHeader(Message message, Map.Entry<String, String> entry) {
+    private void putHeader(Message message, Map.Entry<String, String> entry, boolean envelopeHeaders) {
         if (entry.getKey() == null || entry.getValue() == null) return;
         String propertyName = entry.getKey().toLowerCase(Locale.ROOT);
+        if (envelopeHeaders && RESERVED_ENVELOPE_PROPERTIES.contains(propertyName)) return;
         if (RESERVED_PROPERTIES.contains(propertyName) || RESERVED_ENVELOPE_PROPERTIES.contains(propertyName)) {
             throw new MessageException("VALIDATION_FAILED: reserved RocketMQ user property: " + entry.getKey());
         }
         message.putUserProperty(entry.getKey(), entry.getValue());
+    }
+
+    private static Set<String> reservedProperties() {
+        Set<String> names = new HashSet<>();
+        MessageConst.STRING_HASH_SET.forEach(property -> names.add(property.toLowerCase(Locale.ROOT)));
+        for (Field field : MessageConst.class.getFields()) {
+            if (Modifier.isStatic(field.getModifiers()) && field.getType() == String.class
+                    && field.getName().startsWith("PROPERTY_")) {
+                try {
+                    names.add(((String) field.get(null)).toLowerCase(Locale.ROOT));
+                } catch (IllegalAccessException ignored) {
+                    // Public constants are expected to be accessible; the SDK set remains the fallback.
+                }
+            }
+        }
+        names.add("__" + "transient");
+        names.add("__" + "shardingkey");
+        return Set.copyOf(names);
     }
 }

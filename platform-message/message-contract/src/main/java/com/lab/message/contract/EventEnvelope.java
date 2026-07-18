@@ -18,6 +18,6 @@ public record EventEnvelope<T>(
         T payload
 ) {
     public EventEnvelope {
-        headers = Map.copyOf(headers);
+        headers = headers == null ? Map.of() : Map.copyOf(headers);
     }
 }

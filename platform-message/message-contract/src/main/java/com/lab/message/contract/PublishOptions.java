@@ -10,6 +10,6 @@ public record PublishOptions(
         Map<String, String> headers
 ) {
     public PublishOptions {
-        headers = Map.copyOf(headers);
+        headers = headers == null ? Map.of() : Map.copyOf(headers);
     }
 }

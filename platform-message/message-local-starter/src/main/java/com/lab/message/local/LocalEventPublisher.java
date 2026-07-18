@@ -25,9 +25,9 @@ public class LocalEventPublisher implements EventPublisher, AutoCloseable {
         properties.validate();
         this.properties = properties;
         this.registry = registry;
-        this.executor = new ThreadPoolExecutor(properties.getCoreSize(), properties.getMaxSize(),
+        this.executor = new ThreadPoolExecutor(properties.getExecutor().getCoreSize(), properties.getExecutor().getMaxSize(),
                 60L, java.util.concurrent.TimeUnit.SECONDS,
-                new java.util.concurrent.ArrayBlockingQueue<>(properties.getQueueCapacity()),
+                new java.util.concurrent.ArrayBlockingQueue<>(properties.getExecutor().getQueueCapacity()),
                 new ThreadPoolExecutor.AbortPolicy());
         this.ownsExecutor = true;
     }

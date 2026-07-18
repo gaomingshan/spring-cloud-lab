@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.UUID;
 import java.security.SecureRandom;
+import java.util.Locale;
 
 public class EventEnvelopeFactory {
     private static final SecureRandom RANDOM = new SecureRandom();
@@ -51,7 +52,7 @@ public class EventEnvelopeFactory {
 
     private static String hex(String value, int length) {
         if (value == null) return null;
-        String normalized = value.replace("-", "").toLowerCase();
+        String normalized = value.replace("-", "").toLowerCase(Locale.ROOT);
         return normalized.matches("[0-9a-f]{" + length + "}")
                 && !normalized.chars().allMatch(character -> character == '0') ? normalized : null;
     }

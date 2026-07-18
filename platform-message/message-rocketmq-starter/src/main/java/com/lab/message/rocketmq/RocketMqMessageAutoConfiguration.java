@@ -33,7 +33,6 @@ import org.springframework.context.annotation.Bean;
 @EnableConfigurationProperties(RocketMqMessageProperties.class)
 @ConditionalOnClass(DefaultMQProducer.class)
 @ConditionalOnProperty(prefix = "lab.message.rocketmq", name = "enabled", havingValue = "true")
-@ConditionalOnMissingBean(EventPublisher.class)
 public class RocketMqMessageAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(EventSerializer.class)
@@ -81,7 +80,7 @@ public class RocketMqMessageAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(RocketMqProducer.class)
+    @ConditionalOnMissingBean({RocketMqProducer.class, EventPublisher.class})
     RocketMqProducer rocketMqProducer(RocketMqConfiguration configuration,
                                       RocketMqMessageMapper mapper,
                                       ObjectProvider<TransactionMQProducer> transactionProducer,
@@ -106,17 +105,17 @@ public class RocketMqMessageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(DelayedEventPublisher.class)
+    @ConditionalOnDelayLevels
     DelayedEventPublisher rocketMqDelayedEventPublisher(RocketMqProducer producer,
-                                                         RocketMqMessageProperties properties) {
-        return properties.getDelayLevels().isEmpty() ? null : new RocketMqDelayedProducer(producer);
+                                                          RocketMqMessageProperties properties) {
+        return new RocketMqDelayedProducer(producer);
     }
 
     @Bean
     @ConditionalOnMissingBean(TransactionalEventPublisher.class)
     @ConditionalOnBean({TransactionListener.class, TransactionMQProducer.class})
     @ConditionalOnProperty(prefix = "lab.message.rocketmq.transaction", name = "enabled", havingValue = "true")
-    TransactionalEventPublisher rocketMqTransactionalEventPublisher(RocketMqProducer producer,
-                                                                      ObjectProvider<TransactionListener> listener) {
-        return new RocketMqTransactionalProducer(producer, producer.transactionProducer());
+    TransactionalEventPublisher rocketMqTransactionalEventPublisher(RocketMqProducer producer) {
+        return new RocketMqTransactionalProducer(producer);
     }
 }

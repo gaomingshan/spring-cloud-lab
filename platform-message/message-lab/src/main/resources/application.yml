@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: message-lab
+
+lab:
+  message:
+    local:
+      enabled: true
+      dispatch-mode: sync
+      executor:
+        core-size: 2
+        max-size: 4
+        queue-capacity: 100
+    rocketmq:
+      enabled: false
