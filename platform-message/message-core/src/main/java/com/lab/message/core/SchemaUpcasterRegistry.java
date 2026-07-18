@@ -3,17 +3,17 @@ package com.lab.message.core;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.lab.message.contract.MessageException;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class SchemaUpcasterRegistry {
-    private final Map<Key, SchemaUpcaster> upcasters = new HashMap<>();
+    private final Map<Key, SchemaUpcaster> upcasters = new ConcurrentHashMap<>();
 
     public void register(String eventType, int fromVersion, SchemaUpcaster upcaster) {
         if (eventType == null || eventType.isBlank() || fromVersion <= 0 || upcaster == null) {
             throw new MessageException("UPCASTER_REGISTRATION_FAILED: invalid event type, version, or upcaster");
         }
-        upcasters.put(new Key(eventType, fromVersion), upcaster);
+        upcasters.put(new Key(eventType.trim(), fromVersion), upcaster);
     }
 
     public JsonNode upgrade(String eventType, int fromVersion, int currentVersion, JsonNode payload) {
@@ -23,16 +23,16 @@ public class SchemaUpcasterRegistry {
         if (fromVersion > currentVersion) {
             throw new MessageException("UPCAST_FAILED: source schema is newer than requested schema");
         }
-        JsonNode result = payload;
+        JsonNode result = payload.deepCopy();
         for (int version = fromVersion; version < currentVersion; version++) {
-            SchemaUpcaster upcaster = upcasters.get(new Key(eventType, version));
+            SchemaUpcaster upcaster = upcasters.get(new Key(eventType.trim(), version));
             if (upcaster == null) {
                 throw new MessageException("UPCAST_FAILED: missing upcaster for " + eventType + " from version " + version);
             }
-            result = upcaster.upcast(result);
+            result = upcaster.upcast(result.deepCopy());
             if (result == null) throw new MessageException("UPCAST_FAILED: upcaster returned null");
         }
-        return result;
+        return result.deepCopy();
     }
 
     private record Key(String eventType, int fromVersion) { }

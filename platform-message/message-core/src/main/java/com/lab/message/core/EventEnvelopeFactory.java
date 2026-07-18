@@ -3,6 +3,7 @@ package com.lab.message.core;
 import com.lab.foundation.context.RequestContext;
 import com.lab.foundation.context.RequestContextHolder;
 import com.lab.message.contract.EventEnvelope;
+import com.lab.message.contract.MessageException;
 
 import java.time.Instant;
 import java.util.HashMap;
@@ -12,6 +13,10 @@ public class EventEnvelopeFactory {
     private final MessageCoreProperties properties;
 
     public EventEnvelopeFactory(MessageCoreProperties properties) {
+        if (properties == null) {
+            throw new MessageException("CONFIGURATION_FAILED: message core properties are required");
+        }
+        properties.validate();
         this.properties = properties;
     }
 
@@ -21,7 +26,6 @@ public class EventEnvelopeFactory {
         if (context != null) {
             put(headers, "request-id", context.requestId());
             put(headers, "trace-id", context.traceId());
-            put(headers, "traceparent", context.traceId());
             put(headers, "span-id", context.spanId());
             put(headers, "tenant-id", context.tenantId());
             put(headers, "principal-id", context.principalId());
