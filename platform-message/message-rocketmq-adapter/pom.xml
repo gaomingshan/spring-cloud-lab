@@ -11,4 +11,22 @@
     </parent>
     <artifactId>message-rocketmq-adapter</artifactId>
     <name>message-rocketmq-adapter</name>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.lab</groupId>
+            <artifactId>message-contract</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.lab</groupId>
+            <artifactId>message-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.rocketmq</groupId>
+            <artifactId>rocketmq-client</artifactId>
+            <version>5.3.1</version>
+        </dependency>
+    </dependencies>
 </project>

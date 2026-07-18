@@ -34,5 +34,13 @@ public class MessageCoreProperties {
         if (defaultSchemaVersion <= 0) {
             throw new MessageException("CONFIGURATION_FAILED: defaultSchemaVersion must be positive");
         }
+        validatePrefix(destinationPrefix, "destinationPrefix");
+        validatePrefix(consumerGroupPrefix, "consumerGroupPrefix");
+    }
+
+    private static void validatePrefix(String prefix, String name) {
+        if (prefix == null || prefix.isBlank() || !prefix.trim().matches("[A-Za-z0-9]+(?:[-.][A-Za-z0-9]+)*")) {
+            throw new MessageException("CONFIGURATION_FAILED: " + name + " is malformed");
+        }
     }
 }

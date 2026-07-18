@@ -4,26 +4,26 @@ import com.lab.message.contract.MessageException;
 
 public class DefaultMessageNamingStrategy implements MessageNamingStrategy {
     private static final String NAME_PATTERN = "[a-z0-9]+(?:-[a-z0-9]+)*";
-    private final MessageCoreProperties properties;
+    private final String destinationPrefix;
+    private final String consumerGroupPrefix;
 
     public DefaultMessageNamingStrategy(MessageCoreProperties properties) {
         if (properties == null) {
             throw new MessageException("NAMING_FAILED: message core properties are required");
         }
         properties.validate();
-        normalize(properties.getDestinationPrefix());
-        normalize(properties.getConsumerGroupPrefix());
-        this.properties = properties;
+        this.destinationPrefix = normalize(properties.getDestinationPrefix());
+        this.consumerGroupPrefix = normalize(properties.getConsumerGroupPrefix());
     }
 
     @Override
     public String destination(String eventType) {
-        return join(properties.getDestinationPrefix(), normalize(eventType));
+        return join(destinationPrefix, normalize(eventType));
     }
 
     @Override
     public String consumerGroup(String application, String purpose) {
-        return join(properties.getConsumerGroupPrefix(), normalize(application), normalize(purpose));
+        return join(consumerGroupPrefix, normalize(application), normalize(purpose));
     }
 
     private static String join(String... parts) {
