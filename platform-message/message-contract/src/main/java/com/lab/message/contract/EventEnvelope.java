@@ -17,4 +17,7 @@ public record EventEnvelope<T>(
         Map<String, String> headers,
         T payload
 ) {
+    public EventEnvelope {
+        headers = Map.copyOf(headers);
+    }
 }

@@ -9,4 +9,7 @@ public record PublishOptions(
         Duration timeout,
         Map<String, String> headers
 ) {
+    public PublishOptions {
+        headers = Map.copyOf(headers);
+    }
 }
