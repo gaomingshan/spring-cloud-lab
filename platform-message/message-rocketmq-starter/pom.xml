@@ -5,20 +5,10 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.lab</groupId>
-        <artifactId>spring-cloud-lab</artifactId>
+        <artifactId>platform-message</artifactId>
         <version>1.0.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <artifactId>platform-message</artifactId>
-    <packaging>pom</packaging>
-    <name>platform-message</name>
-
-    <modules>
-        <module>message-contract</module>
-        <module>message-core</module>
-        <module>message-local-starter</module>
-        <module>message-rocketmq-adapter</module>
-        <module>message-rocketmq-starter</module>
-        <module>message-lab</module>
-    </modules>
+    <artifactId>message-rocketmq-starter</artifactId>
+    <name>message-rocketmq-starter</name>
 </project>
