@@ -1,0 +1,12 @@
+package com.lab.message.contract;
+
+import java.time.Duration;
+import java.util.Map;
+
+public record PublishOptions(
+        String destination,
+        String key,
+        Duration timeout,
+        Map<String, String> headers
+) {
+}
