@@ -2,10 +2,11 @@ package com.lab.message.lab;
 
 import com.lab.message.core.EventEnvelopeFactory;
 import com.lab.message.core.MessageCoreProperties;
-import com.lab.message.local.LocalEventHandlerRegistry;
+import com.lab.message.local.LocalMessageEvent;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.event.EventListener;
 
 @SpringBootApplication
 public class MessageLabApplication {
@@ -20,10 +21,8 @@ public class MessageLabApplication {
         return new EventEnvelopeFactory(properties);
     }
 
-    @Bean
-    LocalEventHandlerRegistry messageLabHandlerRegistry() {
-        LocalEventHandlerRegistry registry = new LocalEventHandlerRegistry();
-        registry.register("lab.message.probe.v1", event -> { });
-        return registry;
+    @EventListener
+    public void onLocalMessage(LocalMessageEvent event) {
+        // The Lab intentionally delegates local dispatch to Spring's event infrastructure.
     }
 }

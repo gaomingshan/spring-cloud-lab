@@ -132,9 +132,9 @@ The core must not depend on a broker SDK. Its public defaults must be replaceabl
 
 ## Local Message Starter
 
-`message-local-starter` provides a process-local event bus behind the same `EventPublisher` and `EventHandler` contracts.
+`message-local-starter` provides a process-local publishing bridge behind the same `EventPublisher` contract. Publication delegates to Spring `ApplicationEventPublisher`, and applications receive `LocalMessageEvent` through Spring `@EventListener`.
 
-It supports synchronous and asynchronous dispatch, handler registration, shared envelope serialization, context propagation, handler exception reporting, and executor configuration.
+It does not implement a second handler registry or executor. Synchronous behavior is provided by Spring's default application-event infrastructure; applications opt into asynchronous listeners through Spring's `@Async` support.
 
 ```yaml
 lab:
