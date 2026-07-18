@@ -4,5 +4,5 @@ import java.time.Duration;
 
 public interface DelayedEventPublisher extends EventPublisher {
 
-    PublishResult publishDelayed(EventEnvelope<?> event, Duration delay);
+    void publishDelayed(EventEnvelope<?> event, Duration delay);
 }
