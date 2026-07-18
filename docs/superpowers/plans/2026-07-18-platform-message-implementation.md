@@ -74,10 +74,6 @@ git commit -m "feat: add platform message modules"
 **Files:**
 - Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/EventEnvelope.java`
 - Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/EventPublisher.java`
-- Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/EventHandler.java`
-- Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/PublishOptions.java`
-- Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/PublishResult.java`
-- Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/PublishStatus.java`
 - Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/OrderedEventPublisher.java`
 - Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/DelayedEventPublisher.java`
 - Create: `platform-message/message-contract/src/main/java/com/lab/message/contract/TransactionalEventPublisher.java`
@@ -86,7 +82,7 @@ git commit -m "feat: add platform message modules"
 **Interfaces:**
 - Produces the stable API used by local and RocketMQ implementations.
 - `EventEnvelope<T>` contains `eventId`, `eventType`, `producer`, `aggregateType`, `aggregateId`, `partitionKey`, `idempotencyKey`, `occurredAt`, `traceparent`, `headers`, and `payload`.
-- `PublishResult` uses `SENT`, `ACCEPTED`, and `FAILED`.
+- Publish success is represented by normal return; validation and transport failures throw `MessageException`.
 
 - [ ] **Step 1: Write the contract compile fixture**
 
@@ -94,7 +90,7 @@ Create a temporary source fixture in `message-contract/src/main/java` that const
 
 - [ ] **Step 2: Add immutable records and interfaces**
 
-Use Java records for value types and defensive normalization in implementations, not in the public record constructors. Keep `EventHandler<T>` as a checked-exception functional interface.
+Use Java records for value types and defensive normalization in implementations, not in the public record constructors.
 
 - [ ] **Step 3: Remove the temporary fixture after the public API compiles**
 
@@ -164,19 +160,18 @@ git commit -m "feat: add message core policies"
 **Files:**
 - Modify: `platform-message/message-local-starter/pom.xml`
 - Create: `platform-message/message-local-starter/src/main/java/com/lab/message/local/LocalMessageProperties.java`
-- Create: `platform-message/message-local-starter/src/main/java/com/lab/message/local/LocalEventHandlerRegistry.java`
 - Create: `platform-message/message-local-starter/src/main/java/com/lab/message/local/LocalEventPublisher.java`
 - Create: `platform-message/message-local-starter/src/main/java/com/lab/message/local/LocalMessageAutoConfiguration.java`
 - Create: `platform-message/message-local-starter/src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
 
 **Interfaces:**
 - Produces `EventPublisher` for local dispatch.
-- Handler registration is typed by event type and accepts `EventHandler<?>`.
+- Local reception uses Spring `@EventListener` and `LocalMessageEvent`.
 - Supports `sync` and `async` dispatch modes.
 
 - [ ] **Step 1: Define properties and executor settings**
 
-Bind `lab.message.local.enabled`, `dispatch-mode`, `executor.core-size`, `executor.max-size`, and `executor.queue-capacity`. Validate positive sizes and reject unknown dispatch modes.
+Bind only the Local enablement switch if configuration is needed. Dispatch and asynchronous execution remain Spring concerns.
 
 - [ ] **Step 2: Implement handler registry**
 
@@ -212,8 +207,8 @@ git commit -m "feat: add local message starter"
 **Files:**
 - Modify: `platform-message/message-rocketmq-adapter/pom.xml`
 - Create: `platform-message/message-rocketmq-adapter/src/main/java/com/lab/message/rocketmq/adapter/RocketMqMessageMapper.java`
-- Create: `platform-message/message-rocketmq-adapter/src/main/java/com/lab/message/rocketmq/adapter/RocketMqProducer.java`
-- Create: `platform-message/message-rocketmq-adapter/src/main/java/com/lab/message/rocketmq/adapter/RocketMqPublishResultMapper.java`
+- Create: `platform-message/message-rocketmq-adapter/src/main/java/com/lab/message/rocketmq/adapter/RocketMqTransport.java`
+- Create: `platform-message/message-rocketmq-adapter/src/main/java/com/lab/message/rocketmq/adapter/RocketMqEventPublisher.java`
 - Create: `platform-message/message-rocketmq-adapter/src/main/java/com/lab/message/rocketmq/adapter/RocketMqConfiguration.java`
 
 **Interfaces:**
@@ -230,7 +225,7 @@ Map serialized bytes to RocketMQ body, event ID to key/message key, event type t
 
 - [ ] **Step 3: Implement ordinary send**
 
-Use the native producer API to send synchronously with configured timeout and retry settings. Map the native message ID and send status to `PublishResult`.
+Use the native producer API to send synchronously with configured timeout and retry settings. Normal return means success; non-success status or transport failure throws `MessageException`.
 
 - [ ] **Step 4: Implement ordered send**
 
@@ -312,7 +307,7 @@ Depend on `message-contract`, `message-core`, `message-local-starter`, and `mess
 
 - [ ] **Step 2: Add a protocol probe**
 
-Expose a small controller or runner that creates an `EventEnvelope` through `EventEnvelopeFactory`, publishes it through `EventPublisher`, and returns `PublishResult`. Do not hard-code broker SDK calls in the Lab.
+Expose a small controller or runner that creates an `EventEnvelope` through `EventEnvelopeFactory` and publishes it through `EventPublisher`. Normal return means success; failures are exceptions. Do not hard-code broker SDK calls in the Lab.
 
 - [ ] **Step 3: Add separate explicit capability probes**
 

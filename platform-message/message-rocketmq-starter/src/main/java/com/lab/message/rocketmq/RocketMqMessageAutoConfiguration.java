@@ -13,8 +13,8 @@ import com.lab.message.rocketmq.adapter.RocketMqConfiguration;
 import com.lab.message.rocketmq.adapter.RocketMqDelayedProducer;
 import com.lab.message.rocketmq.adapter.RocketMqMessageMapper;
 import com.lab.message.rocketmq.adapter.RocketMqOrderedProducer;
-import com.lab.message.rocketmq.adapter.RocketMqProducer;
-import com.lab.message.rocketmq.adapter.RocketMqPublishResultMapper;
+import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
+import com.lab.message.rocketmq.adapter.RocketMqTransport;
 import com.lab.message.rocketmq.adapter.RocketMqTransactionalProducer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
@@ -79,43 +79,40 @@ public class RocketMqMessageAutoConfiguration {
         return configuration.createTransactionProducer(listener.getObject());
     }
 
-    @Bean
-    @ConditionalOnMissingBean({RocketMqProducer.class, EventPublisher.class})
-    RocketMqProducer rocketMqProducer(RocketMqConfiguration configuration,
+    @Bean(destroyMethod = "close")
+    @ConditionalOnMissingBean(RocketMqTransport.class)
+    RocketMqTransport rocketMqTransport(RocketMqConfiguration configuration,
                                       RocketMqMessageMapper mapper,
-                                      ObjectProvider<TransactionMQProducer> transactionProducer,
-                                      RocketMqPublishResultMapper resultMapper) throws Exception {
+                                      ObjectProvider<TransactionMQProducer> transactionProducer) throws Exception {
         DefaultMQProducer producer = configuration.createProducer();
         TransactionMQProducer nativeTransactionProducer = transactionProducer.getIfAvailable();
-        return new RocketMqProducer(producer, mapper, resultMapper, configuration,
-                nativeTransactionProducer, true, false);
+        return new RocketMqTransport(producer, mapper, configuration, nativeTransactionProducer, true);
     }
 
     @Bean
-    @ConditionalOnMissingBean
-    RocketMqPublishResultMapper rocketMqPublishResultMapper() {
-        return new RocketMqPublishResultMapper();
+    @ConditionalOnMissingBean(EventPublisher.class)
+    EventPublisher rocketMqEventPublisher(RocketMqTransport transport) {
+        return new RocketMqEventPublisher(transport);
     }
 
     @Bean
     @ConditionalOnMissingBean(OrderedEventPublisher.class)
-    OrderedEventPublisher rocketMqOrderedEventPublisher(RocketMqProducer producer) {
-        return new RocketMqOrderedProducer(producer);
+    OrderedEventPublisher rocketMqOrderedEventPublisher(RocketMqTransport transport) {
+        return new RocketMqOrderedProducer(transport);
     }
 
     @Bean
     @ConditionalOnMissingBean(DelayedEventPublisher.class)
     @ConditionalOnDelayLevels
-    DelayedEventPublisher rocketMqDelayedEventPublisher(RocketMqProducer producer,
-                                                          RocketMqMessageProperties properties) {
-        return new RocketMqDelayedProducer(producer);
+    DelayedEventPublisher rocketMqDelayedEventPublisher(RocketMqTransport transport) {
+        return new RocketMqDelayedProducer(transport);
     }
 
     @Bean
     @ConditionalOnMissingBean(TransactionalEventPublisher.class)
     @ConditionalOnBean({TransactionListener.class, TransactionMQProducer.class})
     @ConditionalOnProperty(prefix = "lab.message.rocketmq.transaction", name = "enabled", havingValue = "true")
-    TransactionalEventPublisher rocketMqTransactionalEventPublisher(RocketMqProducer producer) {
-        return new RocketMqTransactionalProducer(producer);
+    TransactionalEventPublisher rocketMqTransactionalEventPublisher(RocketMqTransport transport) {
+        return new RocketMqTransactionalProducer(transport);
     }
 }

@@ -2,14 +2,11 @@ package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.MessageException;
-import com.lab.message.contract.PublishOptions;
 import com.lab.message.core.EventSerializer;
 import com.lab.message.core.MessageNamingStrategy;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageConst;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -31,24 +28,20 @@ public class RocketMqMessageMapper {
         this.namingStrategy = namingStrategy;
     }
 
-    public Message map(EventEnvelope<?> event, PublishOptions options) {
-        return map(event, options, null);
+    public Message map(EventEnvelope<?> event) {
+        return map(event, null);
     }
 
-    public Message map(EventEnvelope<?> event, PublishOptions options, Integer delayLevel) {
+    public Message map(EventEnvelope<?> event, Integer delayLevel) {
         if (event == null) throw new MessageException("VALIDATION_FAILED: event is null");
-        PublishOptions effective = options == null ? new PublishOptions(null, null, null, Map.of()) : options;
-        String topic = blank(effective.destination()) ? namingStrategy.destination(event.eventType()) : effective.destination();
-        String key = blank(effective.key()) ? event.eventId() : effective.key();
+        String topic = namingStrategy.destination(event.eventType());
+        String key = event.eventId();
         Message message = new Message(topic, event.eventType(), key, serializer.serialize(event));
         message.putUserProperty("eventId", event.eventId());
         message.putUserProperty("eventType", event.eventType());
         if (!blank(event.traceparent())) message.putUserProperty("traceparent", event.traceparent());
         for (Map.Entry<String, String> entry : event.headers().entrySet()) {
             putHeader(message, entry, true);
-        }
-        for (Map.Entry<String, String> entry : effective.headers().entrySet()) {
-            putHeader(message, entry, false);
         }
         if (delayLevel != null) message.setDelayTimeLevel(delayLevel);
         return message;

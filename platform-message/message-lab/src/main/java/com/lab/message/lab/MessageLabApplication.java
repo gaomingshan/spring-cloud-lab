@@ -23,6 +23,6 @@ public class MessageLabApplication {
 
     @EventListener
     public void onLocalMessage(LocalMessageEvent event) {
-        // The Lab intentionally delegates local dispatch to Spring's event infrastructure.
+        event.envelope().eventType();
     }
 }

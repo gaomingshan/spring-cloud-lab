@@ -60,59 +60,27 @@ The event type is a stable protocol name, never a Java fully qualified class nam
 
 ```java
 public interface EventPublisher {
-    PublishResult publish(EventEnvelope<?> event);
-    PublishResult publish(EventEnvelope<?> event, PublishOptions options);
+    void publish(EventEnvelope<?> event);
 }
 ```
 
-```java
-public record PublishOptions(
-        String destination,
-        String key,
-        Duration timeout,
-        Map<String, String> headers
-) {
-}
-```
+Publish success is represented by normal return. Validation and transport failures throw `MessageException`. Destination, timeout, key, and headers are controlled by the envelope, naming strategy, and transport configuration rather than per-call options.
 
-`publish(event)` uses the configured default destination and timeout. `PublishOptions` is immutable; null maps are normalized to empty maps by the core implementation, and an explicitly provided destination or timeout overrides the configured default.
-
-```java
-public record PublishResult(
-        String eventId,
-        PublishStatus status,
-        String messageId,
-        String failureReason
-) {
-}
-```
-
-`SENT` means the transport accepted the send and returned a transport message ID. `ACCEPTED` is reserved for transports that enqueue work asynchronously without an immediate broker ID. `FAILED` includes validation, serialization, transport, and local-handler dispatch failures as classified causes.
-
-The result reports publish acceptance or failure only. It never claims that a consumer has completed processing.
-
-### Consumption and Explicit Capabilities
-
-```java
-@FunctionalInterface
-public interface EventHandler<T> {
-    void handle(EventEnvelope<T> event) throws Exception;
-}
-```
+### Explicit Capabilities
 
 Broker-specific capabilities remain explicit:
 
 ```java
 public interface OrderedEventPublisher extends EventPublisher {
-    PublishResult publishOrdered(EventEnvelope<?> event, String partitionKey);
+    void publishOrdered(EventEnvelope<?> event);
 }
 
 public interface DelayedEventPublisher extends EventPublisher {
-    PublishResult publishDelayed(EventEnvelope<?> event, Duration delay);
+    void publishDelayed(EventEnvelope<?> event, Duration delay);
 }
 
 public interface TransactionalEventPublisher extends EventPublisher {
-    PublishResult publishTransactional(EventEnvelope<?> event);
+    void publishInTransaction(EventEnvelope<?> event);
 }
 ```
 
@@ -136,23 +104,11 @@ The core must not depend on a broker SDK. Its public defaults must be replaceabl
 
 It does not implement a second handler registry or executor. Synchronous behavior is provided by Spring's default application-event infrastructure; applications opt into asynchronous listeners through Spring's `@Async` support.
 
-```yaml
-lab:
-  message:
-    local:
-      enabled: true
-      dispatch-mode: async
-      executor:
-        core-size: 4
-        max-size: 16
-        queue-capacity: 1000
-```
-
 Local delivery explicitly does not promise persistence, cross-process delivery, crash recovery, consumer-group coordination, broker retry, or multi-instance broadcast. Durable local messaging belongs to the reliable-message capability layer.
 
 ## RocketMQ Adapter and Starter
 
-`message-rocketmq-adapter` encapsulates RocketMQ SDK types and maps native messages to the common contract. It owns producer, consumer, topic/tag/key, ordered, delayed, transactional, retry, dead-letter, ACK, and message-ID behavior.
+`message-rocketmq-adapter` encapsulates RocketMQ SDK types and maps the common contract to producer-side ordinary, ordered, delayed, and transactional APIs. Consumer, dead-letter, ACK, and message-replay capabilities are outside this producer-only slice.
 
 `message-rocketmq-starter` owns Spring Boot auto-configuration and exposes the default `EventPublisher` plus optional ordered, delayed, and transactional publisher beans only when enabled and supported.
 

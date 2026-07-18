@@ -4,7 +4,7 @@ import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.OrderedEventPublisher;
-import com.lab.message.contract.PublishResult;
+import com.lab.message.contract.MessageException;
 import com.lab.message.contract.TransactionalEventPublisher;
 import com.lab.message.core.EventEnvelopeFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -37,37 +37,38 @@ public class MessageProbeController {
     }
 
     @GetMapping("/probe")
-    public PublishResult probe() {
-        return publisher.publish(event());
+    public void probe() {
+        publisher.publish(event());
     }
 
     @PostMapping("/publish")
-    public PublishResult publish() {
-        return publisher.publish(event());
+    public void publish() {
+        publisher.publish(event());
     }
 
     @PostMapping("/ordered")
-    public PublishResult ordered() {
+    public void ordered() {
         OrderedEventPublisher capability = orderedPublisher.getIfAvailable();
-        return capability == null
-                ? unsupported("ordered publisher is not configured")
-                : capability.publishOrdered(event(), "message-lab-order");
+        if (capability == null) throw unsupported("ordered publisher is not configured");
+        EventEnvelope<Map<String, Object>> event = event();
+        event = new EventEnvelope<>(event.eventId(), event.eventType(), event.producer(),
+                event.aggregateType(), event.aggregateId(), "message-lab-order", event.idempotencyKey(),
+                event.occurredAt(), event.traceparent(), event.headers(), event.payload());
+        capability.publishOrdered(event);
     }
 
     @PostMapping("/delayed")
-    public PublishResult delayed() {
+    public void delayed() {
         DelayedEventPublisher capability = delayedPublisher.getIfAvailable();
-        return capability == null
-                ? unsupported("delayed publisher is not configured")
-                : capability.publishDelayed(event(), Duration.ofSeconds(10));
+        if (capability == null) throw unsupported("delayed publisher is not configured");
+        capability.publishDelayed(event(), Duration.ofSeconds(10));
     }
 
     @PostMapping("/transactional")
-    public PublishResult transactional() {
+    public void transactional() {
         TransactionalEventPublisher capability = transactionalPublisher.getIfAvailable();
-        return capability == null
-                ? unsupported("transactional publisher is not configured")
-                : capability.publishTransactional(event());
+        if (capability == null) throw unsupported("transactional publisher is not configured");
+        capability.publishInTransaction(event());
     }
 
     private EventEnvelope<Map<String, Object>> event() {
@@ -76,8 +77,7 @@ public class MessageProbeController {
                 "timestamp", System.currentTimeMillis()));
     }
 
-    private static PublishResult unsupported(String reason) {
-        return new PublishResult(null, com.lab.message.contract.PublishStatus.FAILED, null,
-                "CAPABILITY_UNAVAILABLE: " + reason);
+    private static MessageException unsupported(String reason) {
+        return new MessageException("CAPABILITY_UNAVAILABLE: " + reason);
     }
 }
