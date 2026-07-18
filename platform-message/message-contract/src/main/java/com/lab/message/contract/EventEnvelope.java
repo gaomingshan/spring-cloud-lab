@@ -6,7 +6,6 @@ import java.util.Map;
 public record EventEnvelope<T>(
         String eventId,
         String eventType,
-        int schemaVersion,
         String producer,
         String aggregateType,
         String aggregateId,

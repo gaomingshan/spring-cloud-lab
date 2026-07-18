@@ -37,7 +37,7 @@ public class EventEnvelopeFactory {
         String traceparent = traceparent(context);
         headers.put("traceparent", traceparent);
         return new EventEnvelope<>(UUID.randomUUID().toString(), eventType,
-                properties.getDefaultSchemaVersion(), properties.getProducer(),
+                properties.getProducer(),
                 null, null, null, null, Instant.now(),
                 traceparent, headers, payload);
     }

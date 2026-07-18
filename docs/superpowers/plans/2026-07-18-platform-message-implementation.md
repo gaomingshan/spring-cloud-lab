@@ -4,7 +4,7 @@
 
 **Goal:** Build the first reusable messaging foundation with a broker-neutral event contract, process-local event bus, RocketMQ adapter/starter, and a compilable messaging Lab.
 
-**Architecture:** `message-contract` owns broker-neutral protocols. `message-core` owns serialization, schema upgrades, naming, validation, and context defaults. Local and RocketMQ starters implement the same `EventPublisher` contract; RocketMQ-specific ordered, delayed, and transactional APIs remain explicit. Spring Cloud Stream is deferred to a later adapter and must not enter the common contract.
+**Architecture:** `message-contract` owns broker-neutral protocols. `message-core` owns JSON serialization, naming, validation, and context defaults. Local and RocketMQ starters implement the same `EventPublisher` contract; RocketMQ-specific ordered, delayed, and transactional APIs remain explicit. Spring Cloud Stream is deferred to a later adapter and must not enter the common contract.
 
 **Tech Stack:** Java 21, Spring Boot 3.5.9, Spring Cloud 2025.0.0, Spring Cloud Alibaba 2025.0.0.0, Jackson, RocketMQ Java/Spring integration, Spring Boot auto-configuration.
 
@@ -85,7 +85,7 @@ git commit -m "feat: add platform message modules"
 
 **Interfaces:**
 - Produces the stable API used by local and RocketMQ implementations.
-- `EventEnvelope<T>` contains `eventId`, `eventType`, `schemaVersion`, `producer`, `aggregateType`, `aggregateId`, `partitionKey`, `idempotencyKey`, `occurredAt`, `traceparent`, `headers`, and `payload`.
+- `EventEnvelope<T>` contains `eventId`, `eventType`, `producer`, `aggregateType`, `aggregateId`, `partitionKey`, `idempotencyKey`, `occurredAt`, `traceparent`, `headers`, and `payload`.
 - `PublishResult` uses `SENT`, `ACCEPTED`, and `FAILED`.
 
 - [ ] **Step 1: Write the contract compile fixture**
@@ -120,8 +120,6 @@ git commit -m "feat: define message contract"
 - Create: `platform-message/message-core/src/main/java/com/lab/message/core/EventEnvelopeFactory.java`
 - Create: `platform-message/message-core/src/main/java/com/lab/message/core/EventSerializer.java`
 - Create: `platform-message/message-core/src/main/java/com/lab/message/core/JsonEventSerializer.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/SchemaUpcaster.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/SchemaUpcasterRegistry.java`
 - Create: `platform-message/message-core/src/main/java/com/lab/message/core/MessageNamingStrategy.java`
 - Create: `platform-message/message-core/src/main/java/com/lab/message/core/DefaultMessageNamingStrategy.java`
 - Create: `platform-message/message-core/src/main/java/com/lab/message/core/MessageCoreProperties.java`
@@ -129,9 +127,8 @@ git commit -m "feat: define message contract"
 **Interfaces:**
 - `JsonEventSerializer.serialize(EventEnvelope<?>)` returns UTF-8 JSON bytes.
 - `JsonEventSerializer.deserialize(byte[], Class<T>)` returns a typed envelope payload.
-- `SchemaUpcaster` upgrades a raw payload from one schema version to the next.
 - `MessageNamingStrategy.destination(eventType)` and `.consumerGroup(application, purpose)` provide stable names.
-- `EventEnvelopeFactory.create(eventType, payload)` supplies event ID, producer, time, headers, and schema version defaults.
+- `EventEnvelopeFactory.create(eventType, payload)` supplies event ID, producer, time, and headers.
 
 - [ ] **Step 1: Add Jackson and foundation-context dependencies**
 
@@ -139,17 +136,13 @@ git commit -m "feat: define message contract"
 
 - [ ] **Step 2: Implement the event envelope factory**
 
-The factory reads producer and default schema version from `MessageCoreProperties`, generates a UUID event ID, uses `Instant.now()`, copies current request context headers when available, and never uses a Java class name as `eventType` unless the caller explicitly supplies it.
+The factory reads producer from `MessageCoreProperties`, generates a UUID event ID, uses `Instant.now()`, copies current request context headers when available, and never uses a Java class name as `eventType` unless the caller explicitly supplies it.
 
 - [ ] **Step 3: Implement JSON serialization and validation**
 
-Reject blank `eventId`, `eventType`, producer, non-positive schema versions, and null payloads with `MessageException`. Serialize stable JSON field names and preserve `headers` as a map.
+Reject blank `eventId`, `eventType`, producer, and null payloads with `MessageException`. Serialize stable JSON field names and preserve `headers` as a map.
 
-- [ ] **Step 4: Implement Upcaster registration and ordered upgrades**
-
-`SchemaUpcasterRegistry` registers `(eventType, fromVersion)` keys and applies consecutive upcasters until the requested current version. Missing links fail with a classified `MessageException` rather than silently passing incompatible payloads.
-
-- [ ] **Step 5: Implement naming defaults**
+- [ ] **Step 4: Implement naming defaults**
 
 Use configurable prefixes and a normalized event type, with no Broker-specific terminology in the core API.
 
@@ -233,7 +226,7 @@ Use the Spring Cloud Alibaba RocketMQ dependency managed by the project BOM wher
 
 - [ ] **Step 2: Implement envelope-to-native-message mapping**
 
-Map serialized bytes to RocketMQ body, event ID to key/message key, event type to tag when configured, schema version and traceparent to native user properties, and configured destination to topic.
+Map serialized bytes to RocketMQ body, event ID to key/message key, event type to tag when configured, traceparent to native user properties, and configured destination to topic.
 
 - [ ] **Step 3: Implement ordinary send**
 

@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class RocketMqMessageMapper {
     private static final Set<String> RESERVED_PROPERTIES = reservedProperties();
     private static final Set<String> RESERVED_ENVELOPE_PROPERTIES = Set.of(
-            "eventid", "eventtype", "schemaversion", "traceparent");
+            "eventid", "eventtype", "traceparent");
     private final EventSerializer serializer;
     private final MessageNamingStrategy namingStrategy;
 
@@ -43,7 +43,6 @@ public class RocketMqMessageMapper {
         Message message = new Message(topic, event.eventType(), key, serializer.serialize(event));
         message.putUserProperty("eventId", event.eventId());
         message.putUserProperty("eventType", event.eventType());
-        message.putUserProperty("schemaVersion", Integer.toString(event.schemaVersion()));
         if (!blank(event.traceparent())) message.putUserProperty("traceparent", event.traceparent());
         for (Map.Entry<String, String> entry : event.headers().entrySet()) {
             putHeader(message, entry, true);

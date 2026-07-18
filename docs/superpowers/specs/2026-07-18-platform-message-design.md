@@ -9,7 +9,7 @@ Build a reusable messaging foundation that solves shared protocol, publishing, s
 The first implementation supports:
 
 - A broker-neutral event contract.
-- Shared JSON serialization and schema-version handling.
+- Shared JSON serialization without core-level payload version enforcement.
 - A process-local event bus with the same public publishing contract.
 - RocketMQ as the first remote broker implementation.
 - Explicit RocketMQ ordered, delayed, and transactional publishing interfaces.
@@ -41,7 +41,6 @@ platform-message
 public record EventEnvelope<T>(
         String eventId,
         String eventType,
-        int schemaVersion,
         String producer,
         String aggregateType,
         String aggregateId,
@@ -55,7 +54,7 @@ public record EventEnvelope<T>(
 }
 ```
 
-The event type is a stable protocol name, never a Java fully qualified class name. `schemaVersion` and `SchemaUpcaster` allow old payloads to be upgraded before handler invocation.
+The event type is a stable protocol name, never a Java fully qualified class name. The payload is opaque JSON-compatible data. If an application needs payload versioning, it owns the version marker and upgrade policy in its payload or application headers; the messaging core does not interpret or enforce it.
 
 ### Publishing
 
@@ -123,8 +122,7 @@ public interface TransactionalEventPublisher extends EventPublisher {
 
 - Event ID, event time, producer, and header defaults.
 - JSON encoder and decoder.
-- Event type and schema-version validation.
-- `SchemaUpcaster` and registry.
+- Event type and envelope metadata validation.
 - Topic, destination, and consumer-group naming strategies.
 - Request/trace context extraction and propagation.
 - Publish failure classification.
@@ -197,7 +195,7 @@ message-contract
 
 ## Lab
 
-`message-lab` demonstrates local synchronous/asynchronous events, RocketMQ ordinary/ordered/delayed/transactional publication, envelope headers, trace context, schema upgrades, handler failures, and publish results. It does not implement Outbox, Inbox, consumer idempotency, or business workflows.
+`message-lab` demonstrates local synchronous/asynchronous events, RocketMQ ordinary/ordered/delayed/transactional publication, envelope headers, trace context, handler failures, and publish results. It does not implement Outbox, Inbox, consumer idempotency, or business workflows.
 
 ## Starter Requirements
 
