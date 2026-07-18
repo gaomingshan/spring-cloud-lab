@@ -1,6 +1,8 @@
 package com.lab.governance.sentinel;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -16,10 +18,11 @@ import java.util.List;
 
 @AutoConfiguration
 @EnableConfigurationProperties(SentinelProperties.class)
-@ConditionalOnProperty(prefix = "lab.governance.sentinel", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class SentinelAutoConfiguration {
+@ConditionalOnClass(NacosDataSource.class)
+@ConditionalOnProperty(prefix = "lab.governance.sentinel.nacos", name = "enabled", havingValue = "true")
+public class SentinelNacosRuleAutoConfiguration {
     @Bean(destroyMethod = "close")
-    @ConditionalOnProperty(prefix = "lab.governance.sentinel.nacos", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean(name = "sentinelFlowDataSource")
     NacosDataSource<List<FlowRule>> sentinelFlowDataSource(SentinelProperties properties, ObjectMapper mapper) {
         var nacos = properties.getNacos();
         var source = new NacosDataSource<List<FlowRule>>(nacosProperties(nacos), nacos.getGroup(),
@@ -29,7 +32,7 @@ public class SentinelAutoConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    @ConditionalOnProperty(prefix = "lab.governance.sentinel.nacos", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean(name = "sentinelDegradeDataSource")
     NacosDataSource<List<DegradeRule>> sentinelDegradeDataSource(SentinelProperties properties, ObjectMapper mapper) {
         var nacos = properties.getNacos();
         var source = new NacosDataSource<List<DegradeRule>>(nacosProperties(nacos), nacos.getGroup(),

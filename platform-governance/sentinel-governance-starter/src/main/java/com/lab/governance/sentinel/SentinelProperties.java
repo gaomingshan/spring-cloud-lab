@@ -8,12 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @Getter
 @Setter
 public class SentinelProperties {
-    private boolean enabled = true;
-    private boolean eager;
-    private String dashboard;
-    private int transportPort = 8719;
     private final Nacos nacos = new Nacos();
-    private final Feign feign = new Feign();
 
 
     @Getter
@@ -28,14 +23,5 @@ public class SentinelProperties {
         private String flowDataId = "sentinel-flow-rules";
         private String degradeDataId = "sentinel-degrade-rules";
         private String cluster = "DEFAULT";
-    }
-
-    @Getter
-    @Setter
-    public static class Feign {
-        private boolean enabled = true;
-        private boolean fallbackEnabled = true;
-        private String contextName = "feign-outbound";
-        private String resourcePrefix = "feign:";
     }
 }
