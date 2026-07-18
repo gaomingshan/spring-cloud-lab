@@ -24,7 +24,6 @@ Transactional Outbox, Inbox, consumer idempotency, durable local messages, relia
 ```text
 platform-message
 ├── message-contract
-├── message-core
 ├── message-local-starter
 ├── message-rocketmq-adapter
 ├── message-rocketmq-starter
@@ -86,17 +85,7 @@ public interface TransactionalEventPublisher extends EventPublisher {
 
 ## Message Core
 
-`message-core` contains broker-neutral strategy and default implementations:
-
-- Event ID, event time, producer, and header defaults.
-- JSON encoder and decoder.
-- Event type and envelope metadata validation.
-- Topic, destination, and consumer-group naming strategies.
-- Request/trace context extraction and propagation.
-- Publish failure classification.
-- Common message exception types.
-
-The core must not depend on a broker SDK. Its public defaults must be replaceable through interfaces or Spring beans in the Starter modules.
+`message-contract` is the broker-neutral layer. Callers create complete `EventEnvelope` instances themselves. Each adapter owns serialization, native destination naming, mapping, and transport-specific validation while delegating execution to the underlying messaging ecosystem.
 
 ## Local Message Starter
 
@@ -108,7 +97,7 @@ Local delivery explicitly does not promise persistence, cross-process delivery, 
 
 ## RocketMQ Adapter and Starter
 
-`message-rocketmq-adapter` encapsulates RocketMQ SDK types and maps the common contract to producer-side ordinary, ordered, delayed, and transactional APIs. Consumer, dead-letter, ACK, and message-replay capabilities are outside this producer-only slice.
+`message-rocketmq-adapter` encapsulates RocketMQ SDK types, uses Jackson directly for its current codec, maps the common contract to producer-side ordinary, ordered, delayed, and transactional APIs, and delegates execution to native RocketMQ producers. Consumer, dead-letter, ACK, and message-replay capabilities are outside this producer-only slice.
 
 `message-rocketmq-starter` owns Spring Boot auto-configuration and exposes the default `EventPublisher` plus optional ordered, delayed, and transactional publisher beans only when enabled and supported.
 
@@ -143,10 +132,9 @@ The intended graph is:
 
 ```text
 message-contract
-    -> message-core
-        -> local starter
-        -> RocketMQ adapter/starter
-        -> future Stream starter
+    -> local starter
+    -> RocketMQ adapter/starter
+    -> future Stream starter
 ```
 
 ## Lab

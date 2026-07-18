@@ -20,11 +20,6 @@
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>message-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lab</groupId>
             <artifactId>message-local-starter</artifactId>
             <version>${project.version}</version>
         </dependency>

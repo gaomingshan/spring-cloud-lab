@@ -2,8 +2,6 @@ package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.MessageException;
-import com.lab.message.core.EventSerializer;
-import com.lab.message.core.MessageNamingStrategy;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageConst;
 
@@ -13,19 +11,20 @@ import java.util.Set;
 import java.util.HashSet;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
-import java.util.stream.Collectors;
 
 public class RocketMqMessageMapper {
     private static final Set<String> RESERVED_PROPERTIES = reservedProperties();
     private static final Set<String> RESERVED_ENVELOPE_PROPERTIES = Set.of(
             "eventid", "eventtype", "traceparent");
-    private final EventSerializer serializer;
-    private final MessageNamingStrategy namingStrategy;
+    private final RocketMqEventCodec codec;
+    private final String topicPrefix;
 
-    public RocketMqMessageMapper(EventSerializer serializer, MessageNamingStrategy namingStrategy) {
-        if (serializer == null || namingStrategy == null) throw new MessageException("CONFIGURATION_FAILED: mapper dependencies are required");
-        this.serializer = serializer;
-        this.namingStrategy = namingStrategy;
+    public RocketMqMessageMapper(RocketMqEventCodec codec, String topicPrefix) {
+        if (codec == null || blank(topicPrefix)) {
+            throw new MessageException("CONFIGURATION_FAILED: RocketMQ mapper dependencies are required");
+        }
+        this.codec = codec;
+        this.topicPrefix = normalizeTopicPrefix(topicPrefix);
     }
 
     public Message map(EventEnvelope<?> event) {
@@ -34,9 +33,9 @@ public class RocketMqMessageMapper {
 
     public Message map(EventEnvelope<?> event, Integer delayLevel) {
         if (event == null) throw new MessageException("VALIDATION_FAILED: event is null");
-        String topic = namingStrategy.destination(event.eventType());
+        String topic = topicPrefix + normalizeTopicPart(event.eventType());
         String key = event.eventId();
-        Message message = new Message(topic, event.eventType(), key, serializer.serialize(event));
+        Message message = new Message(topic, event.eventType(), key, codec.encode(event));
         message.putUserProperty("eventId", event.eventId());
         message.putUserProperty("eventType", event.eventType());
         if (!blank(event.traceparent())) message.putUserProperty("traceparent", event.traceparent());
@@ -48,6 +47,22 @@ public class RocketMqMessageMapper {
     }
 
     static boolean blank(String value) { return value == null || value.isBlank(); }
+
+    private static String normalizeTopicPrefix(String value) {
+        String normalized = value.trim();
+        if (normalized.endsWith(".")) normalized = normalized.substring(0, normalized.length() - 1);
+        if (blank(normalized) || !normalized.matches("[A-Za-z0-9_-]+")) {
+            throw new MessageException("CONFIGURATION_FAILED: RocketMQ topic prefix is malformed");
+        }
+        return normalized + ".";
+    }
+
+    private static String normalizeTopicPart(String value) {
+        if (blank(value)) throw new MessageException("NAMING_FAILED: event type is blank");
+        String normalized = value.trim().replaceAll("[^A-Za-z0-9_-]+", "-");
+        if (blank(normalized)) throw new MessageException("NAMING_FAILED: event type is malformed");
+        return normalized;
+    }
 
     private void putHeader(Message message, Map.Entry<String, String> entry, boolean envelopeHeaders) {
         if (entry.getKey() == null || entry.getValue() == null) return;

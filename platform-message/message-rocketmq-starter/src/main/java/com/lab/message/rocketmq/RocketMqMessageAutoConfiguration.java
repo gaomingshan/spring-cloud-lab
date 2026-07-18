@@ -4,13 +4,9 @@ import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
-import com.lab.message.core.DefaultMessageNamingStrategy;
-import com.lab.message.core.EventSerializer;
-import com.lab.message.core.JsonEventSerializer;
-import com.lab.message.core.MessageCoreProperties;
-import com.lab.message.core.MessageNamingStrategy;
 import com.lab.message.rocketmq.adapter.RocketMqConfiguration;
 import com.lab.message.rocketmq.adapter.RocketMqDelayedProducer;
+import com.lab.message.rocketmq.adapter.RocketMqEventCodec;
 import com.lab.message.rocketmq.adapter.RocketMqMessageMapper;
 import com.lab.message.rocketmq.adapter.RocketMqOrderedProducer;
 import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
@@ -35,23 +31,6 @@ import org.springframework.context.annotation.Bean;
 @ConditionalOnProperty(prefix = "lab.message.rocketmq", name = "enabled", havingValue = "true")
 public class RocketMqMessageAutoConfiguration {
     @Bean
-    @ConditionalOnMissingBean(EventSerializer.class)
-    EventSerializer rocketMqEventSerializer(ObjectMapper objectMapper) {
-        return new JsonEventSerializer(objectMapper);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(MessageNamingStrategy.class)
-    MessageNamingStrategy rocketMqNamingStrategy(RocketMqMessageProperties properties) {
-        properties.validate();
-        MessageCoreProperties core = new MessageCoreProperties();
-        core.setProducer(properties.getProducer().getGroup());
-        core.setDestinationPrefix(properties.getNaming().getTopicPrefix());
-        core.setConsumerGroupPrefix(properties.getNaming().getGroupPrefix());
-        return new DefaultMessageNamingStrategy(core);
-    }
-
-    @Bean
     RocketMqConfiguration rocketMqConfiguration(RocketMqMessageProperties properties) {
         properties.validate();
         RocketMqConfiguration configuration = new RocketMqConfiguration();
@@ -66,8 +45,14 @@ public class RocketMqMessageAutoConfiguration {
     }
 
     @Bean
-    RocketMqMessageMapper rocketMqMessageMapper(EventSerializer serializer, MessageNamingStrategy namingStrategy) {
-        return new RocketMqMessageMapper(serializer, namingStrategy);
+    RocketMqMessageMapper rocketMqMessageMapper(RocketMqEventCodec codec, RocketMqMessageProperties properties) {
+        return new RocketMqMessageMapper(codec, properties.getNaming().getTopicPrefix());
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RocketMqEventCodec.class)
+    RocketMqEventCodec rocketMqEventCodec(ObjectMapper objectMapper) {
+        return new RocketMqEventCodec(objectMapper);
     }
 
     @ConditionalOnMissingBean(TransactionMQProducer.class)

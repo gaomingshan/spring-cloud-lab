@@ -3,7 +3,6 @@ package com.lab.message.local;
 import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.MessageException;
-import com.lab.message.core.JsonEventSerializer;
 import org.springframework.context.ApplicationEventPublisher;
 
 public class LocalEventPublisher implements EventPublisher {
@@ -18,7 +17,9 @@ public class LocalEventPublisher implements EventPublisher {
 
     @Override
     public void publish(EventEnvelope<?> event) {
-        JsonEventSerializer.validate(event);
+        if (event == null) {
+            throw new MessageException("VALIDATION_FAILED: event is null");
+        }
         applicationEventPublisher.publishEvent(new LocalMessageEvent(this, event));
     }
 }

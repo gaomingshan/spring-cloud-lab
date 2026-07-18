@@ -53,7 +53,7 @@ public final class LocalMessageEvent extends ApplicationEvent {
 
 - [ ] **Step 2: Replace publisher internals**
 
-Make `LocalEventPublisher` accept `ApplicationEventPublisher`, validate the envelope with `JsonEventSerializer.validate(event)`, then call `applicationEventPublisher.publishEvent(new LocalMessageEvent(this, event))`. Let synchronous listener exceptions propagate; do not catch them into result objects. Remove executor, dispatch mode, registry, and lifecycle code.
+Make `LocalEventPublisher` accept `ApplicationEventPublisher`, reject only a null envelope, then call `applicationEventPublisher.publishEvent(new LocalMessageEvent(this, event))`. Let synchronous listener exceptions propagate; do not catch them into result objects. Remove executor, dispatch mode, registry, and lifecycle code.
 
 - [ ] **Step 3: Simplify auto-configuration**
 

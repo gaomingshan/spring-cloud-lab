@@ -6,7 +6,6 @@ import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.MessageException;
 import com.lab.message.contract.TransactionalEventPublisher;
-import com.lab.message.core.EventEnvelopeFactory;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,23 +13,23 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Duration;
+import java.time.Instant;
+import java.util.UUID;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/message")
 public class MessageProbeController {
     private final EventPublisher publisher;
-    private final EventEnvelopeFactory envelopeFactory;
     private final ObjectProvider<OrderedEventPublisher> orderedPublisher;
     private final ObjectProvider<DelayedEventPublisher> delayedPublisher;
     private final ObjectProvider<TransactionalEventPublisher> transactionalPublisher;
 
-    public MessageProbeController(EventPublisher publisher, EventEnvelopeFactory envelopeFactory,
+    public MessageProbeController(EventPublisher publisher,
                                   ObjectProvider<OrderedEventPublisher> orderedPublisher,
                                   ObjectProvider<DelayedEventPublisher> delayedPublisher,
                                   ObjectProvider<TransactionalEventPublisher> transactionalPublisher) {
         this.publisher = publisher;
-        this.envelopeFactory = envelopeFactory;
         this.orderedPublisher = orderedPublisher;
         this.delayedPublisher = delayedPublisher;
         this.transactionalPublisher = transactionalPublisher;
@@ -50,10 +49,7 @@ public class MessageProbeController {
     public void ordered() {
         OrderedEventPublisher capability = orderedPublisher.getIfAvailable();
         if (capability == null) throw unsupported("ordered publisher is not configured");
-        EventEnvelope<Map<String, Object>> event = event();
-        event = new EventEnvelope<>(event.eventId(), event.eventType(), event.producer(),
-                event.aggregateType(), event.aggregateId(), "message-lab-order", event.idempotencyKey(),
-                event.occurredAt(), event.traceparent(), event.headers(), event.payload());
+        EventEnvelope<Map<String, Object>> event = event("message-lab-order");
         capability.publishOrdered(event);
     }
 
@@ -72,7 +68,12 @@ public class MessageProbeController {
     }
 
     private EventEnvelope<Map<String, Object>> event() {
-        return envelopeFactory.create("lab.message.probe.v1", Map.of(
+        return event(null);
+    }
+
+    private EventEnvelope<Map<String, Object>> event(String partitionKey) {
+        return new EventEnvelope<>(UUID.randomUUID().toString(), "lab.message.probe.v1", "message-lab",
+                null, null, partitionKey, null, Instant.now(), null, Map.of(), Map.of(
                 "source", "message-lab",
                 "timestamp", System.currentTimeMillis()));
     }

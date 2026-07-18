@@ -4,13 +4,13 @@
 
 **Goal:** Remove schema-version and Upcaster enforcement from the messaging foundation so JSON payload evolution remains an application-level concern.
 
-**Architecture:** Keep `EventEnvelope` focused on transport and tracing metadata plus an opaque JSON-compatible payload. `message-core` will provide JSON serialization, validation, context propagation, and naming only; clients may implement their own payload versioning through payload fields or headers. RocketMQ mapping will no longer publish schema metadata as a native property.
+**Architecture:** Keep `EventEnvelope` focused on transport and tracing metadata plus an opaque payload. Callers create complete envelopes, and each adapter owns serialization, validation needed by its native client, and naming. Clients may implement their own payload versioning through payload fields or headers. RocketMQ mapping will no longer publish schema metadata as a native property.
 
 **Tech Stack:** Java 21, Spring Boot 3.5.9, Jackson, Maven, existing broker-neutral message modules.
 
 ## Global Constraints
 
-- `message-contract` and `message-core` remain free of RocketMQ, Kafka, RabbitMQ, and Spring Cloud Stream types.
+- `message-contract` remains free of RocketMQ, Kafka, RabbitMQ, and Spring Cloud Stream types.
 - No Outbox, Inbox, durable local messaging, consumer idempotency, or eventual-consistency workflow is added.
 - Schema versioning and Upcaster behavior are removed rather than deprecated or replaced by compatibility shims.
 - JSON serialization must continue to validate event identity, event type, producer, traceparent, and payload.

@@ -4,7 +4,7 @@
 
 **Goal:** Build the first reusable messaging foundation with a broker-neutral event contract, process-local event bus, RocketMQ adapter/starter, and a compilable messaging Lab.
 
-**Architecture:** `message-contract` owns broker-neutral protocols. `message-core` owns JSON serialization, naming, validation, and context defaults. Local and RocketMQ starters implement the same `EventPublisher` contract; RocketMQ-specific ordered, delayed, and transactional APIs remain explicit. Spring Cloud Stream is deferred to a later adapter and must not enter the common contract.
+**Architecture:** `message-contract` owns broker-neutral protocols. Callers create complete envelopes. Local and RocketMQ starters implement the same `EventPublisher` contract; each adapter owns serialization, naming, mapping, and native execution. Spring Cloud Stream is deferred to a later adapter and must not enter the common contract.
 
 **Tech Stack:** Java 21, Spring Boot 3.5.9, Spring Cloud 2025.0.0, Spring Cloud Alibaba 2025.0.0.0, Jackson, RocketMQ Java/Spring integration, Spring Boot auto-configuration.
 
@@ -14,7 +14,7 @@
 - Full verification command is `mvn clean package -DskipTests`.
 - Test sources are not used for integration; the root POM skips test execution.
 - `platform-message` must not implement Outbox, Inbox, consumer idempotency, durable local messages, or eventual-consistency workflows.
-- `message-contract` and `message-core` must not depend on RocketMQ, Kafka, RabbitMQ, or Spring Cloud Stream types.
+- `message-contract` must not depend on RocketMQ, Kafka, RabbitMQ, or Spring Cloud Stream types.
 - Kafka and RabbitMQ adapters are deferred.
 - Spring Cloud Stream is deferred to a later `message-stream-starter` adapter.
 - Every Starter must register with `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`.
@@ -28,7 +28,6 @@
 **Files:**
 - Modify: `platform-message/pom.xml`
 - Create: `platform-message/message-contract/pom.xml`
-- Create: `platform-message/message-core/pom.xml`
 - Create: `platform-message/message-local-starter/pom.xml`
 - Create: `platform-message/message-rocketmq-adapter/pom.xml`
 - Create: `platform-message/message-rocketmq-starter/pom.xml`
@@ -37,14 +36,13 @@
 
 **Interfaces:**
 - Produces the Maven reactor modules consumed by Tasks 2-7.
-- Keeps RocketMQ dependencies out of `message-contract` and `message-core`.
+- Keeps RocketMQ dependencies out of `message-contract`; adapters own their native dependencies.
 
 - [ ] **Step 1: Add child modules to `platform-message/pom.xml`**
 
 ```xml
 <modules>
     <module>message-contract</module>
-    <module>message-core</module>
     <module>message-local-starter</module>
     <module>message-rocketmq-adapter</module>
     <module>message-rocketmq-starter</module>
@@ -109,51 +107,15 @@ git add platform-message/message-contract
 git commit -m "feat: define message contract"
 ```
 
-### Task 3: Implement Broker-Neutral Message Core
+### Task 3: Keep Adapter-Owned Implementations
 
 **Files:**
-- Modify: `platform-message/message-core/pom.xml`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/EventEnvelopeFactory.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/EventSerializer.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/JsonEventSerializer.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/MessageNamingStrategy.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/DefaultMessageNamingStrategy.java`
-- Create: `platform-message/message-core/src/main/java/com/lab/message/core/MessageCoreProperties.java`
-
 **Interfaces:**
-- `JsonEventSerializer.serialize(EventEnvelope<?>)` returns UTF-8 JSON bytes.
-- `JsonEventSerializer.deserialize(byte[], Class<T>)` returns a typed envelope payload.
-- `MessageNamingStrategy.destination(eventType)` and `.consumerGroup(application, purpose)` provide stable names.
-- `EventEnvelopeFactory.create(eventType, payload)` supplies event ID, producer, time, and headers.
+- RocketMQ owns its Jackson codec and topic mapping; other adapters choose their own native codec and naming model.
 
-- [ ] **Step 1: Add Jackson and foundation-context dependencies**
+Adapters depend on `message-contract` and their native client libraries; no cross-broker implementation module is required.
 
-`message-core` depends on `message-contract`, Jackson, and `foundation-context`; it must not depend on a Broker SDK.
-
-- [ ] **Step 2: Implement the event envelope factory**
-
-The factory reads producer from `MessageCoreProperties`, generates a UUID event ID, uses `Instant.now()`, copies current request context headers when available, and never uses a Java class name as `eventType` unless the caller explicitly supplies it.
-
-- [ ] **Step 3: Implement JSON serialization and validation**
-
-Reject blank `eventId`, `eventType`, producer, and null payloads with `MessageException`. Serialize stable JSON field names and preserve `headers` as a map.
-
-- [ ] **Step 4: Implement naming defaults**
-
-Use configurable prefixes and a normalized event type, with no Broker-specific terminology in the core API.
-
-- [ ] **Step 6: Compile the core**
-
-Run: `mvn -f platform-message/message-core/pom.xml -DskipTests compile`
-
-Expected: `BUILD SUCCESS`.
-
-- [ ] **Step 7: Commit the core**
-
-```bash
-git add platform-message/message-core
-git commit -m "feat: add message core policies"
-```
+Callers construct complete `EventEnvelope` instances directly. Do not create a replacement serializer, naming strategy, envelope factory, validator, or core properties module.
 
 ### Task 4: Implement Local Message Starter
 
@@ -303,7 +265,7 @@ git commit -m "feat: add rocketmq message starter"
 
 - [ ] **Step 1: Add application dependencies**
 
-Depend on `message-contract`, `message-core`, `message-local-starter`, and `message-rocketmq-starter`. Do not add `capability-reliable-message`.
+Depend on `message-contract`, `message-local-starter`, and `message-rocketmq-starter`. Do not add `capability-reliable-message`.
 
 - [ ] **Step 2: Add a protocol probe**
 
