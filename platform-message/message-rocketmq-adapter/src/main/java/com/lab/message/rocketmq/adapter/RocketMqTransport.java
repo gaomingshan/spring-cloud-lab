@@ -2,98 +2,78 @@ package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.MessageException;
-import org.apache.rocketmq.client.producer.DefaultMQProducer;
-import org.apache.rocketmq.client.producer.MessageQueueSelector;
-import org.apache.rocketmq.common.message.Message;
+import org.apache.rocketmq.client.producer.SendResult;
+import org.apache.rocketmq.client.producer.SendStatus;
+import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.springframework.messaging.Message;
 
 import java.time.Duration;
+import java.util.Map;
 
 public final class RocketMqTransport {
-    private final DefaultMQProducer producer;
+    private final RocketMQTemplate template;
     private final RocketMqMessageMapper mapper;
-    private final RocketMqConfiguration configuration;
-    private final org.apache.rocketmq.client.producer.TransactionMQProducer transactionProducer;
-    private final boolean ownsProducer;
+    private final Map<Duration, Integer> delayLevels;
 
-    public RocketMqTransport(DefaultMQProducer producer, RocketMqMessageMapper mapper,
-                             RocketMqConfiguration configuration,
-                             org.apache.rocketmq.client.producer.TransactionMQProducer transactionProducer,
-                             boolean ownsProducer) {
-        if (producer == null || mapper == null || configuration == null) {
-            throw new MessageException("CONFIGURATION_FAILED: RocketMQ transport dependencies are required");
+    public RocketMqTransport(RocketMQTemplate template, RocketMqMessageMapper mapper,
+                             Map<Duration, Integer> delayLevels) {
+        if (template == null || mapper == null) {
+            throw new MessageException("CONFIGURATION_FAILED: RocketMQ template and mapper are required");
         }
-        this.producer = producer;
+        this.template = template;
         this.mapper = mapper;
-        this.configuration = configuration;
-        this.transactionProducer = transactionProducer;
-        this.ownsProducer = ownsProducer;
+        this.delayLevels = delayLevels == null ? Map.of() : Map.copyOf(delayLevels);
     }
 
     public void send(EventEnvelope<?> event) {
-        try {
-            ensureSuccess(producer.send(mapper.map(event), configuration.getSendTimeoutMillis()), "ordinary");
-        } catch (MessageException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MessageException("ROCKETMQ_SEND_FAILED: ordinary message send failed", e);
-        }
+        send(mapper.topic(event), mapper.map(event));
     }
 
     public void sendOrdered(EventEnvelope<?> event) {
-        if (event == null || RocketMqMessageMapper.blank(event.partitionKey())) {
+        if (event == null || event.partitionKey() == null || event.partitionKey().isBlank()) {
             throw new MessageException("VALIDATION_FAILED: partitionKey is required for ordered publishing");
         }
-        try {
-            Message message = mapper.map(event);
-            MessageQueueSelector selector = (queues, ignored, argument) ->
-                    queues.get(Math.floorMod(argument.toString().hashCode(), queues.size()));
-            ensureSuccess(producer.send(message, selector, event.partitionKey(), configuration.getSendTimeoutMillis()), "ordered");
-        } catch (MessageException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MessageException("ROCKETMQ_ORDERED_SEND_FAILED: ordered message send failed", e);
-        }
+        check(sendOrderly(mapper.topic(event), mapper.map(event), event.partitionKey()), "ordered");
     }
 
     public void sendDelayed(EventEnvelope<?> event, Duration delay) {
-        Integer delayLevel = delay == null ? null : configuration.getDelayLevels().get(delay);
-        if (delayLevel == null) {
-            throw new MessageException("VALIDATION_FAILED: delay is not explicitly configured");
+        Integer level = delay == null ? null : delayLevels.get(delay);
+        if (level == null) {
+            throw new MessageException("VALIDATION_FAILED: delay is not configured");
         }
-        try {
-            ensureSuccess(producer.send(mapper.map(event, delayLevel), configuration.getSendTimeoutMillis()), "delayed");
-        } catch (MessageException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MessageException("ROCKETMQ_DELAYED_SEND_FAILED: delayed message send failed", e);
-        }
+        check(template.syncSend(mapper.topic(event), mapper.map(event),
+                template.getProducer().getSendMsgTimeout(), level), "delayed");
     }
 
     public void sendInTransaction(EventEnvelope<?> event) {
-        if (transactionProducer == null || transactionProducer.getTransactionListener() == null) {
-            throw new MessageException("CONFIGURATION_FAILED: transaction producer and listener are required");
-        }
         try {
-            var result = transactionProducer.sendMessageInTransaction(mapper.map(event), event);
-            if (result == null || result.getSendStatus() != org.apache.rocketmq.client.producer.SendStatus.SEND_OK) {
-                throw new MessageException("ROCKETMQ_TRANSACTION_FAILED: transaction submission was not accepted");
-            }
+            template.sendMessageInTransaction(mapper.topic(event), mapper.map(event), event);
+        } catch (Exception e) {
+            throw new MessageException("ROCKETMQ_TRANSACTION_FAILED: transaction send failed", e);
+        }
+    }
+
+    private void send(String destination, Message<?> message) {
+        try {
+            check(template.syncSend(destination, message), "ordinary");
         } catch (MessageException e) {
             throw e;
         } catch (Exception e) {
-            throw new MessageException("ROCKETMQ_TRANSACTION_FAILED: transaction message send failed", e);
+            throw new MessageException("ROCKETMQ_SEND_FAILED: message send failed", e);
         }
     }
 
-    public void close() {
-        if (ownsProducer) producer.shutdown();
+    private SendResult sendOrderly(String destination, Message<?> message, String partitionKey) {
+        try {
+            return template.syncSendOrderly(destination, message, partitionKey);
+        } catch (Exception e) {
+            throw new MessageException("ROCKETMQ_ORDERED_SEND_FAILED: ordered send failed", e);
+        }
     }
 
-    private static void ensureSuccess(org.apache.rocketmq.client.producer.SendResult result, String mode) {
-        if (result == null || result.getSendStatus() != org.apache.rocketmq.client.producer.SendStatus.SEND_OK) {
-            String status = result == null || result.getSendStatus() == null
-                    ? "no result" : result.getSendStatus().name();
-            throw new MessageException("ROCKETMQ_" + mode.toUpperCase() + "_SEND_FAILED: " + status);
+    private static void check(SendResult result, String mode) {
+        if (result == null || result.getSendStatus() != SendStatus.SEND_OK) {
+            throw new MessageException("ROCKETMQ_" + mode.toUpperCase() + "_SEND_FAILED");
         }
     }
 }

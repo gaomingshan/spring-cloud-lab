@@ -97,9 +97,9 @@ Local delivery explicitly does not promise persistence, cross-process delivery, 
 
 ## RocketMQ Adapter and Starter
 
-`message-rocketmq-adapter` encapsulates RocketMQ SDK types, uses Jackson directly for its current codec, maps the common contract to producer-side ordinary, ordered, delayed, and transactional APIs, and delegates execution to native RocketMQ producers. Consumer, dead-letter, ACK, and message-replay capabilities are outside this producer-only slice.
+`message-rocketmq-adapter` is a thin bridge over RocketMQ Spring. It uses `RocketMQTemplate`, `RocketMQMessageConverter`, `@RocketMQMessageListener`, and the official listener containers. The adapter maps `EventEnvelope` to Spring Messaging messages and exposes the common publisher capabilities without owning producer, consumer, codec, thread-pool, retry, or consume-model implementations.
 
-`message-rocketmq-starter` owns Spring Boot auto-configuration and exposes the default `EventPublisher` plus optional ordered, delayed, and transactional publisher beans only when enabled and supported.
+`message-rocketmq-starter` only gates the adapter facade with `lab.message.rocketmq.enabled`. Producer, consumer, converter, listener, thread, retry, and consume-model configuration remains under the official `rocketmq.*` properties and annotations. User-provided `RocketMQTemplate`, `RocketMQMessageConverter`, destination resolver, and listener beans take precedence through Spring's conditional bean model.
 
 ```yaml
 lab:

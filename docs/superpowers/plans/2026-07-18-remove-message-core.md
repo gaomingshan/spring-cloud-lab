@@ -4,7 +4,7 @@
 
 **Goal:** Remove the artificial `message-core` implementation layer and let callers create `EventEnvelope` while each adapter delegates serialization, naming, and transport behavior to its native ecosystem.
 
-**Architecture:** `message-contract` remains the only broker-neutral API. Local and RocketMQ modules consume complete envelopes; Local delegates to Spring application events, while RocketMQ owns its codec and RocketMQ-specific topic mapping and delegates sending to native producers. No new cross-broker codec, naming, factory, or properties abstraction is introduced.
+**Architecture:** `message-contract` remains the only broker-neutral API. Local delegates to Spring application events. RocketMQ delegates to the official RocketMQ Spring integration (`RocketMQTemplate`, `RocketMQMessageConverter`, listener annotations, and listener containers); the adapter only maps complete envelopes and exposes the common publisher facade. No new cross-broker codec, naming, factory, consumer, thread-pool, or properties abstraction is introduced.
 
 **Tech Stack:** Java 21, Spring Boot 3.5.9, Maven, Jackson in the RocketMQ adapter, Apache RocketMQ client 5.3.1, Spring ApplicationEvent infrastructure.
 
@@ -12,7 +12,7 @@
 
 - Callers construct `EventEnvelope` directly.
 - `message-core` has no remaining implementation responsibility and is removed.
-- Serialization is adapter-owned and uses existing ecosystem libraries.
+- Serialization and listener lifecycle are owned by the official RocketMQ Spring integration.
 - Do not add a replacement validator, naming strategy, envelope factory, or cross-broker codec.
 - Preserve existing staged/deleted governance test changes.
 - Verify with `mvn clean package -DskipTests`, `git diff --check`, and stale-reference scans.
