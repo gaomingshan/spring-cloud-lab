@@ -14,6 +14,7 @@
 - `lab.message.rocketmq.*` only controls adapter enablement, delay-level lookup, and the optional destination resolver.
 - Do not create a custom Producer, Consumer, Codec, MessageConverter, ListenerContainer, retry policy, consume model, or thread pool.
 - User-provided official RocketMQ beans and adapter resolver beans override defaults with `@ConditionalOnMissingBean`.
+- Business code depends on `EventSubscriber`, `EventSubscription`, and `EventHandler`; it does not use `@RocketMQMessageListener` directly.
 - Verify with `mvn clean package -DskipTests` and `git diff --check`.
 
 ### Task 1: Use Official RocketMQ Spring Dependencies
@@ -49,6 +50,7 @@
 - [x] Keep official `rocketmq.*` configuration as the source for Producer and Consumer behavior.
 - [x] Keep adapter-specific delay levels and optional topic prefix/resolver only.
 - [x] Gate the adapter facade on the presence of official `RocketMQTemplate` and the lab enablement property.
+- [x] Bridge `EventSubscriber.subscribe(...)` through official `DefaultRocketMQListenerContainer` lifecycle and `RocketMQMessageConverter`.
 
 ### Task 4: Verify and Document
 

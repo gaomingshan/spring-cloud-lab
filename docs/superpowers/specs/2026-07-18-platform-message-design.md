@@ -83,6 +83,26 @@ public interface TransactionalEventPublisher extends EventPublisher {
 }
 ```
 
+### Consuming
+
+The broker-neutral consumer facade keeps only concepts shared by the supported adapters:
+
+```java
+public interface EventSubscriber {
+    void subscribe(EventSubscription subscription, EventHandler handler);
+}
+
+public record EventSubscription(
+        String destination,
+        String consumerGroup,
+        String selector,
+        ConsumptionMode consumptionMode
+) {
+}
+```
+
+`ConsumptionMode` supports `CONCURRENT` and `ORDERED`. Broker-specific retry limits, thread counts, message models, acknowledgment rules, and listener-container settings remain in the adapter's native ecosystem configuration.
+
 ## Message Core
 
 `message-contract` is the broker-neutral layer. Callers create complete `EventEnvelope` instances themselves. Each adapter owns serialization, native destination naming, mapping, and transport-specific validation while delegating execution to the underlying messaging ecosystem.
@@ -97,7 +117,7 @@ Local delivery explicitly does not promise persistence, cross-process delivery, 
 
 ## RocketMQ Adapter and Starter
 
-`message-rocketmq-adapter` is a thin bridge over RocketMQ Spring. It uses `RocketMQTemplate`, `RocketMQMessageConverter`, `@RocketMQMessageListener`, and the official listener containers. The adapter maps `EventEnvelope` to Spring Messaging messages and exposes the common publisher capabilities without owning producer, consumer, codec, thread-pool, retry, or consume-model implementations.
+`message-rocketmq-adapter` is a thin bridge over RocketMQ Spring. It uses `RocketMQTemplate`, `RocketMQMessageConverter`, and `DefaultRocketMQListenerContainer`. The adapter maps `EventEnvelope` to Spring Messaging messages and exposes both `EventPublisher` and `EventSubscriber` without owning producer, consumer, codec, thread-pool, retry, or consume-model implementations.
 
 `message-rocketmq-starter` only gates the adapter facade with `lab.message.rocketmq.enabled`. Producer, consumer, converter, listener, thread, retry, and consume-model configuration remains under the official `rocketmq.*` properties and annotations. User-provided `RocketMQTemplate`, `RocketMQMessageConverter`, destination resolver, and listener beans take precedence through Spring's conditional bean model.
 

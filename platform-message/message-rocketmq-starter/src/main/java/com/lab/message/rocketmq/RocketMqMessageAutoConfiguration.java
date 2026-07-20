@@ -2,6 +2,7 @@ package com.lab.message.rocketmq;
 
 import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventPublisher;
+import com.lab.message.contract.EventSubscriber;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqDelayedProducer;
@@ -11,6 +12,9 @@ import com.lab.message.rocketmq.adapter.RocketMqOrderedProducer;
 import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqTransport;
 import com.lab.message.rocketmq.adapter.RocketMqTransactionalProducer;
+import com.lab.message.rocketmq.adapter.RocketMqEventSubscriber;
+import org.apache.rocketmq.spring.autoconfigure.RocketMQProperties;
+import org.apache.rocketmq.spring.support.RocketMQMessageConverter;
 import org.apache.rocketmq.spring.core.RocketMQLocalTransactionListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -20,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.ApplicationContext;
 
 @AutoConfiguration
 @EnableConfigurationProperties(RocketMqMessageProperties.class)
@@ -45,6 +50,15 @@ public class RocketMqMessageAutoConfiguration {
     RocketMqTransport rocketMqTransport(RocketMQTemplate template, RocketMqMessageMapper mapper,
                                         RocketMqMessageProperties properties) {
         return new RocketMqTransport(template, mapper, properties.getDelayLevels());
+    }
+
+    @Bean(destroyMethod = "close")
+    @ConditionalOnBean({RocketMQProperties.class, RocketMQMessageConverter.class})
+    @ConditionalOnMissingBean(EventSubscriber.class)
+    EventSubscriber rocketMqEventSubscriber(RocketMQProperties properties,
+                                            RocketMQMessageConverter messageConverter,
+                                            ApplicationContext applicationContext) {
+        return new RocketMqEventSubscriber(properties, messageConverter, applicationContext);
     }
 
     @Bean
