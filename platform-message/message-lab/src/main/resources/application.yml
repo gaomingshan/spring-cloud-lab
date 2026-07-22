@@ -1,16 +1,5 @@
 spring:
   application:
     name: message-lab
-
-lab:
-  message:
-    local:
-      enabled: true
-    rocketmq:
-      enabled: false
-
-# When RocketMQ is enabled, configure the official RocketMQ Spring properties:
-# rocketmq:
-#   name-server: 127.0.0.1:9876
-#   producer:
-#     group: ${spring.application.name}-producer
+  profiles:
+    active: local

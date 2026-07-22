@@ -1,0 +1,16 @@
+# RocketMQ sample: requires a reachable NameServer
+lab:
+  message:
+    local:
+      enabled: false
+    rocketmq:
+      enabled: true
+      naming:
+        topic-prefix: "lab."
+      delay-levels:
+        10s: 3
+
+rocketmq:
+  name-server: 127.0.0.1:9876
+  producer:
+    group: ${spring.application.name}-producer
