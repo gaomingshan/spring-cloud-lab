@@ -3,6 +3,7 @@ package com.lab.message.lab.rocketmq;
 import com.lab.message.contract.ConsumptionMode;
 import com.lab.message.contract.EventSubscriber;
 import com.lab.message.contract.EventSubscription;
+import com.lab.message.lab.event.OrderLifecycleEvent;
 import com.lab.message.lab.support.SampleTopics;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
@@ -12,8 +13,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 /**
- * RocketMQ sample consumers: two groups on the same topic demonstrate group-level fan-out
- * (each group receives a full copy under CLUSTERING).
+ * Registers the concrete event type only (never BaseEvent).
+ * Two groups on the same topic demonstrate group-level fan-out.
  */
 @Component
 @ConditionalOnProperty(prefix = "lab.message.rocketmq", name = "enabled", havingValue = "true")
@@ -35,19 +36,21 @@ public class RocketMqSampleConsumers {
 
     private void bindGroup(String consumerGroup, String label) {
         EventSubscription subscription = new EventSubscription(
-                SampleTopics.TOPIC_ORDER_CREATED,
+                SampleTopics.ORDER_EVENTS,
                 consumerGroup,
                 "*",
                 ConsumptionMode.CONCURRENT
         );
-        subscriber.subscribe(subscription, envelope -> log.info(
-                "[rocketmq:{}] group={} topic={} eventType={} eventId={} payload={}",
+        subscriber.subscribe(subscription, OrderLifecycleEvent.class, event -> log.info(
+                "[rocketmq:{}] group={} phase={} eventId={} createOrderId={} paymentId={} cancelReason={}",
                 label,
                 consumerGroup,
-                SampleTopics.TOPIC_ORDER_CREATED,
-                envelope.eventType(),
-                envelope.eventId(),
-                envelope.payload()));
-        log.info("[rocketmq] subscribed label={} group={} topic={}", label, consumerGroup, SampleTopics.TOPIC_ORDER_CREATED);
+                event.getPhase(),
+                event.getEventId(),
+                event.getCreate() != null ? event.getCreate().getOrderId() : null,
+                event.getPayment() != null ? event.getPayment().getPaymentId() : null,
+                event.getCancel() != null ? event.getCancel().getReason() : null));
+        log.info("[rocketmq] subscribed label={} group={} topic={} eventType={}",
+                label, consumerGroup, SampleTopics.ORDER_EVENTS, OrderLifecycleEvent.class.getName());
     }
 }

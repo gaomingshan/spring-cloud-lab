@@ -1,5 +1,6 @@
 package com.lab.message.rocketmq;
 
+import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
@@ -35,7 +36,10 @@ public class RocketMqMessageAutoConfiguration {
     RocketMqDestinationResolver rocketMqDestinationResolver(RocketMqMessageProperties properties) {
         properties.validate();
         String prefix = properties.getNaming().getTopicPrefix();
-        return event -> prefix + event.eventType().trim().replaceAll("[^A-Za-z0-9_-]+", "-");
+        return (BaseEvent event) -> prefix + event.getClass().getSimpleName()
+                .replaceAll("([a-z])([A-Z])", "$1-$2")
+                .replaceAll("[^A-Za-z0-9_-]+", "-")
+                .toLowerCase();
     }
 
     @Bean
@@ -50,10 +54,6 @@ public class RocketMqMessageAutoConfiguration {
         return new RocketMqDelayLevelResolver(properties.getDelayLevels());
     }
 
-    /**
-     * Single facade bean implements all contracts. Collaborators are not registered as beans
-     * so interface injection always resolves to this facade without ambiguity.
-     */
     @Bean
     @Primary
     @ConditionalOnMissingBean(RocketMqMessageFacade.class)

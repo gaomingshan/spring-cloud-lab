@@ -1,12 +1,13 @@
 package com.lab.message.lab.web;
 
 import com.lab.message.contract.DelayedEventPublisher;
-import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.MessageException;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
+import com.lab.message.lab.event.OrderLifecycleEvent;
 import com.lab.message.lab.support.SampleEvents;
+import com.lab.message.lab.support.SampleTopics;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,14 +44,30 @@ public class MessageSampleController {
         body.put("ordered", orderedPublisher.getIfAvailable() != null);
         body.put("delayed", delayedPublisher.getIfAvailable() != null);
         body.put("transactional", transactionalPublisher.getIfAvailable() != null);
+        body.put("topic", SampleTopics.ORDER_EVENTS);
+        body.put("eventType", OrderLifecycleEvent.class.getName());
         return body;
     }
 
     @PostMapping("/publish")
     public Map<String, String> publish() {
-        EventEnvelope<Map<String, Object>> event = SampleEvents.orderCreated();
-        publisher.publish(event);
-        return Map.of("mode", "publish", "eventId", event.eventId(), "eventType", event.eventType());
+        OrderLifecycleEvent event = SampleEvents.orderCreated();
+        publisher.publish(SampleTopics.ORDER_EVENTS, event);
+        return result("publish", event);
+    }
+
+    @PostMapping("/publish/paid")
+    public Map<String, String> publishPaid() {
+        OrderLifecycleEvent event = SampleEvents.orderPaid();
+        publisher.publish(SampleTopics.ORDER_EVENTS, event);
+        return result("publish-paid", event);
+    }
+
+    @PostMapping("/publish/cancelled")
+    public Map<String, String> publishCancelled() {
+        OrderLifecycleEvent event = SampleEvents.orderCancelled();
+        publisher.publish(SampleTopics.ORDER_EVENTS, event);
+        return result("publish-cancelled", event);
     }
 
     @PostMapping("/ordered")
@@ -59,9 +76,10 @@ public class MessageSampleController {
         if (capability == null) {
             throw unavailable("ordered publisher is not configured");
         }
-        EventEnvelope<Map<String, Object>> event = SampleEvents.orderCreated("message-lab-order-key");
-        capability.publishOrdered(event);
-        return Map.of("mode", "ordered", "eventId", event.eventId(), "partitionKey", event.partitionKey());
+        OrderLifecycleEvent event = SampleEvents.orderCreated();
+        String orderId = event.getCreate().getOrderId();
+        capability.publishOrdered(event, orderId);
+        return result("ordered", event);
     }
 
     @PostMapping("/delayed")
@@ -70,9 +88,9 @@ public class MessageSampleController {
         if (capability == null) {
             throw unavailable("delayed publisher is not configured (set lab.message.rocketmq.delay-levels)");
         }
-        EventEnvelope<Map<String, Object>> event = SampleEvents.orderCreated();
+        OrderLifecycleEvent event = SampleEvents.orderCreated();
         capability.publishDelayed(event, Duration.ofSeconds(10));
-        return Map.of("mode", "delayed", "eventId", event.eventId(), "delay", "10s");
+        return result("delayed", event);
     }
 
     @PostMapping("/transactional")
@@ -81,9 +99,17 @@ public class MessageSampleController {
         if (capability == null) {
             throw unavailable("transactional publisher is not configured (need RocketMQLocalTransactionListener bean)");
         }
-        EventEnvelope<Map<String, Object>> event = SampleEvents.orderCreated();
+        OrderLifecycleEvent event = SampleEvents.orderCreated();
         capability.publishInTransaction(event);
-        return Map.of("mode", "transactional", "eventId", event.eventId());
+        return result("transactional", event);
+    }
+
+    private static Map<String, String> result(String mode, OrderLifecycleEvent event) {
+        return Map.of(
+                "mode", mode,
+                "eventId", event.getEventId(),
+                "phase", event.getPhase().name(),
+                "eventClass", event.getClass().getSimpleName());
     }
 
     private static MessageException unavailable(String reason) {

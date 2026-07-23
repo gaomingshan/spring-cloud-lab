@@ -1,4 +1,3 @@
-# RocketMQ sample: requires a reachable NameServer
 lab:
   message:
     local:

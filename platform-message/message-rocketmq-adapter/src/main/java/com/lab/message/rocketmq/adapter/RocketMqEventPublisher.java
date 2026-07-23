@@ -1,7 +1,7 @@
 package com.lab.message.rocketmq.adapter;
 
+import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.DelayedEventPublisher;
-import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.MessageException;
 import com.lab.message.contract.OrderedEventPublisher;
@@ -31,20 +31,29 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
     }
 
     @Override
-    public void publish(EventEnvelope<?> event) {
-        Message<?> message = mapper.map(event);
-        requireOk(template.syncSend(mapper.topic(event), message), "ordinary");
+    public void publish(BaseEvent event) {
+        requireOk(template.syncSend(mapper.topic(event), mapper.map(event)), "ordinary");
     }
 
     @Override
-    public void publishOrdered(EventEnvelope<?> event) {
-        requirePartitionKey(event);
-        Message<?> message = mapper.map(event);
-        requireOk(template.syncSendOrderly(mapper.topic(event), message, event.partitionKey()), "ordered");
+    public void publish(String destination, BaseEvent event) {
+        if (destination == null || destination.isBlank()) {
+            throw new MessageException("VALIDATION_FAILED: destination is required");
+        }
+        requireOk(template.syncSend(destination, mapper.map(event)), "ordinary");
     }
 
     @Override
-    public void publishDelayed(EventEnvelope<?> event, Duration delay) {
+    public void publishOrdered(BaseEvent event, String partitionKey) {
+        if (partitionKey == null || partitionKey.isBlank()) {
+            throw new MessageException("VALIDATION_FAILED: partitionKey is required for ordered publishing");
+        }
+        Message<?> message = mapper.map(event);
+        requireOk(template.syncSendOrderly(mapper.topic(event), message, partitionKey), "ordered");
+    }
+
+    @Override
+    public void publishDelayed(BaseEvent event, Duration delay) {
         int level = delayLevels.resolve(delay);
         Message<?> message = mapper.map(event);
         long timeout = template.getProducer().getSendMsgTimeout();
@@ -52,17 +61,11 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
     }
 
     @Override
-    public void publishInTransaction(EventEnvelope<?> event) {
+    public void publishInTransaction(BaseEvent event) {
         try {
             template.sendMessageInTransaction(mapper.topic(event), mapper.map(event), event);
         } catch (Exception e) {
             throw new MessageException("ROCKETMQ_TRANSACTION_FAILED: transaction send failed", e);
-        }
-    }
-
-    private static void requirePartitionKey(EventEnvelope<?> event) {
-        if (event == null || event.partitionKey() == null || event.partitionKey().isBlank()) {
-            throw new MessageException("VALIDATION_FAILED: partitionKey is required for ordered publishing");
         }
     }
 

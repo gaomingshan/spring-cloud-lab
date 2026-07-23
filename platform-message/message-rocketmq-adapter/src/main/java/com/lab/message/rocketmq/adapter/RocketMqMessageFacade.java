@@ -1,7 +1,7 @@
 package com.lab.message.rocketmq.adapter;
 
+import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.DelayedEventPublisher;
-import com.lab.message.contract.EventEnvelope;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
@@ -26,27 +26,34 @@ public final class RocketMqMessageFacade implements EventPublisher, OrderedEvent
     }
 
     @Override
-    public void publish(EventEnvelope<?> event) {
+    public void publish(BaseEvent event) {
         publisher.publish(event);
     }
 
     @Override
-    public void publishOrdered(EventEnvelope<?> event) {
-        publisher.publishOrdered(event);
+    public void publish(String destination, BaseEvent event) {
+        publisher.publish(destination, event);
     }
 
     @Override
-    public void publishDelayed(EventEnvelope<?> event, Duration delay) {
+    public void publishOrdered(BaseEvent event, String partitionKey) {
+        publisher.publishOrdered(event, partitionKey);
+    }
+
+    @Override
+    public void publishDelayed(BaseEvent event, Duration delay) {
         publisher.publishDelayed(event, delay);
     }
 
     @Override
-    public void publishInTransaction(EventEnvelope<?> event) {
+    public void publishInTransaction(BaseEvent event) {
         publisher.publishInTransaction(event);
     }
 
     @Override
-    public void subscribe(EventSubscription subscription, EventHandler handler) {
-        subscriber.subscribe(subscription, handler);
+    public <E extends BaseEvent> void subscribe(EventSubscription subscription,
+                                                Class<E> eventType,
+                                                EventHandler<E> handler) {
+        subscriber.subscribe(subscription, eventType, handler);
     }
 }

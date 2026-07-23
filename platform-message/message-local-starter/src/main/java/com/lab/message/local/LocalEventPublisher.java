@@ -1,6 +1,6 @@
 package com.lab.message.local;
 
-import com.lab.message.contract.EventEnvelope;
+import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.MessageException;
 import org.springframework.context.ApplicationEventPublisher;
@@ -16,10 +16,15 @@ public class LocalEventPublisher implements EventPublisher {
     }
 
     @Override
-    public void publish(EventEnvelope<?> event) {
+    public void publish(BaseEvent event) {
         if (event == null) {
             throw new MessageException("VALIDATION_FAILED: event is null");
         }
         applicationEventPublisher.publishEvent(new LocalMessageEvent(this, event));
+    }
+
+    @Override
+    public void publish(String destination, BaseEvent event) {
+        publish(event);
     }
 }

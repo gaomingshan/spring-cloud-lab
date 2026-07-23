@@ -1,17 +1,17 @@
 package com.lab.message.local;
 
-import com.lab.message.contract.EventEnvelope;
+import com.lab.message.contract.BaseEvent;
 import org.springframework.context.ApplicationEvent;
 
 public final class LocalMessageEvent extends ApplicationEvent {
-    private final EventEnvelope<?> envelope;
+    private final BaseEvent event;
 
-    public LocalMessageEvent(Object source, EventEnvelope<?> envelope) {
+    public LocalMessageEvent(Object source, BaseEvent event) {
         super(source);
-        this.envelope = envelope;
+        this.event = event;
     }
 
-    public EventEnvelope<?> envelope() {
-        return envelope;
+    public BaseEvent event() {
+        return event;
     }
 }

@@ -1,6 +1,6 @@
 package com.lab.message.contract;
 
 @FunctionalInterface
-public interface EventHandler {
-    void handle(EventEnvelope<?> event);
+public interface EventHandler<E extends BaseEvent> {
+    void handle(E event);
 }

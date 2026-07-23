@@ -1,6 +1,6 @@
 package com.lab.message.rocketmq.adapter;
 
-import com.lab.message.contract.EventEnvelope;
+import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventSubscriber;
 import com.lab.message.contract.EventSubscription;
@@ -9,6 +9,8 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQProperties;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
+
+import java.lang.reflect.Modifier;
 
 public final class RocketMqEventSubscriber implements EventSubscriber {
     private final RocketMQMessageListenerContainerRegistrar registrar;
@@ -24,24 +26,43 @@ public final class RocketMqEventSubscriber implements EventSubscriber {
     }
 
     @Override
-    public void subscribe(EventSubscription subscription, EventHandler handler) {
-        if (subscription == null || handler == null) {
-            throw new MessageException("VALIDATION_FAILED: subscription and handler are required");
+    public <E extends BaseEvent> void subscribe(EventSubscription subscription,
+                                                Class<E> eventType,
+                                                EventHandler<E> handler) {
+        if (subscription == null || eventType == null || handler == null) {
+            throw new MessageException("VALIDATION_FAILED: subscription, eventType and handler are required");
         }
-        String beanName = "labRocketMqListener-" + subscription.consumerGroup() + "-" + subscription.destination();
+        if (eventType == BaseEvent.class || Modifier.isAbstract(eventType.getModifiers()) || eventType.isInterface()) {
+            throw new MessageException("VALIDATION_FAILED: subscribe requires a concrete event type, not " + eventType.getName());
+        }
+        String beanName = "labRocketMqListener-" + subscription.consumerGroup() + "-" + subscription.destination()
+                + "-" + eventType.getSimpleName();
         RocketMQMessageListener annotation = RocketMqListenerAnnotation.from(subscription, properties);
-        registrar.registerContainer(beanName, new EnvelopeListener(handler), annotation);
+        registrar.registerContainer(beanName, new TypedListener<>(eventType, handler), annotation);
     }
 
-    private static final class EnvelopeListener implements RocketMQListener<EventEnvelope<?>> {
-        private final EventHandler handler;
+    /**
+     * Concrete listener type so rocketmq-spring generic resolution can target {@code E}.
+     * Serialization/deserialization is performed by the RocketMQ Spring converter ecosystem.
+     */
+    private static final class TypedListener<E extends BaseEvent> implements RocketMQListener<E> {
+        private final Class<E> eventType;
+        private final EventHandler<E> handler;
 
-        private EnvelopeListener(EventHandler handler) {
+        private TypedListener(Class<E> eventType, EventHandler<E> handler) {
+            this.eventType = eventType;
             this.handler = handler;
         }
 
         @Override
-        public void onMessage(EventEnvelope<?> event) {
+        public void onMessage(E event) {
+            if (event == null) {
+                throw new MessageException("DESERIALIZE_FAILED: null event for " + eventType.getName());
+            }
+            if (!eventType.isInstance(event)) {
+                throw new MessageException("DESERIALIZE_FAILED: expected " + eventType.getName()
+                        + " but got " + event.getClass().getName());
+            }
             handler.handle(event);
         }
     }
