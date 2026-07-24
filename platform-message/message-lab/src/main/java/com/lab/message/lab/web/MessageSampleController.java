@@ -7,7 +7,6 @@ import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
 import com.lab.message.lab.event.OrderLifecycleEvent;
 import com.lab.message.lab.support.SampleEvents;
-import com.lab.message.lab.support.SampleTopics;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -44,7 +43,6 @@ public class MessageSampleController {
         body.put("ordered", orderedPublisher.getIfAvailable() != null);
         body.put("delayed", delayedPublisher.getIfAvailable() != null);
         body.put("transactional", transactionalPublisher.getIfAvailable() != null);
-        body.put("topic", SampleTopics.ORDER_EVENTS);
         body.put("eventType", OrderLifecycleEvent.class.getName());
         return body;
     }
@@ -52,21 +50,21 @@ public class MessageSampleController {
     @PostMapping("/publish")
     public Map<String, String> publish() {
         OrderLifecycleEvent event = SampleEvents.orderCreated();
-        publisher.publish(SampleTopics.ORDER_EVENTS, event);
+        publisher.publish(event);
         return result("publish", event);
     }
 
     @PostMapping("/publish/paid")
     public Map<String, String> publishPaid() {
         OrderLifecycleEvent event = SampleEvents.orderPaid();
-        publisher.publish(SampleTopics.ORDER_EVENTS, event);
+        publisher.publish(event);
         return result("publish-paid", event);
     }
 
     @PostMapping("/publish/cancelled")
     public Map<String, String> publishCancelled() {
         OrderLifecycleEvent event = SampleEvents.orderCancelled();
-        publisher.publish(SampleTopics.ORDER_EVENTS, event);
+        publisher.publish(event);
         return result("publish-cancelled", event);
     }
 
@@ -77,8 +75,7 @@ public class MessageSampleController {
             throw unavailable("ordered publisher is not configured");
         }
         OrderLifecycleEvent event = SampleEvents.orderCreated();
-        String orderId = event.getCreate().getOrderId();
-        capability.publishOrdered(event, orderId);
+        capability.publishOrdered(event);
         return result("ordered", event);
     }
 
@@ -109,7 +106,8 @@ public class MessageSampleController {
                 "mode", mode,
                 "eventId", event.getEventId(),
                 "phase", event.getPhase().name(),
-                "eventClass", event.getClass().getSimpleName());
+                "eventType", event.getEventType() == null ? "" : event.getEventType(),
+                "aggregateId", event.getAggregateId() == null ? "" : event.getAggregateId());
     }
 
     private static MessageException unavailable(String reason) {

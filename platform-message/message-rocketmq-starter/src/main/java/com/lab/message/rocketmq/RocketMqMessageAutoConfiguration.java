@@ -4,6 +4,8 @@ import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
+import com.lab.message.contract.EventSubscription;
+import com.lab.message.contract.MessageException;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqDelayLevelResolver;
@@ -25,6 +27,11 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 
+import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
+
 @AutoConfiguration
 @EnableConfigurationProperties(RocketMqMessageProperties.class)
 @ConditionalOnClass(RocketMQTemplate.class)
@@ -35,23 +42,29 @@ public class RocketMqMessageAutoConfiguration {
     @ConditionalOnMissingBean(RocketMqDestinationResolver.class)
     RocketMqDestinationResolver rocketMqDestinationResolver(RocketMqMessageProperties properties) {
         properties.validate();
-        String prefix = properties.getNaming().getTopicPrefix();
-        return (BaseEvent event) -> prefix + event.getClass().getSimpleName()
-                .replaceAll("([a-z])([A-Z])", "$1-$2")
-                .replaceAll("[^A-Za-z0-9_-]+", "-")
-                .toLowerCase();
+        String prefix = properties.getRocketmq().getNaming().getTopicPrefix();
+        return (BaseEvent event) -> {
+            String seed = event.getEventType();
+            if (seed == null || seed.isBlank()) {
+                seed = event.getClass().getSimpleName();
+            }
+            return prefix + seed.trim()
+                    .replaceAll("([a-z])([A-Z])", "$1-$2")
+                    .replaceAll("[^A-Za-z0-9_-]+", "-")
+                    .toLowerCase(Locale.ROOT);
+        };
     }
 
     @Bean
     @ConditionalOnMissingBean(RocketMqMessageMapper.class)
-    RocketMqMessageMapper rocketMqMessageMapper(RocketMqDestinationResolver destinationResolver) {
-        return new RocketMqMessageMapper(destinationResolver);
+    RocketMqMessageMapper rocketMqMessageMapper() {
+        return new RocketMqMessageMapper();
     }
 
     @Bean
     @ConditionalOnMissingBean(RocketMqDelayLevelResolver.class)
     RocketMqDelayLevelResolver rocketMqDelayLevelResolver(RocketMqMessageProperties properties) {
-        return new RocketMqDelayLevelResolver(properties.getDelayLevels());
+        return new RocketMqDelayLevelResolver(properties.getRocketmq().getDelayLevels());
     }
 
     @Bean
@@ -60,12 +73,36 @@ public class RocketMqMessageAutoConfiguration {
     @ConditionalOnBean({RocketMQTemplate.class, RocketMQMessageListenerContainerRegistrar.class, RocketMQProperties.class})
     RocketMqMessageFacade rocketMqMessageFacade(RocketMQTemplate template,
                                                 RocketMqMessageMapper mapper,
+                                                RocketMqDestinationResolver destinationResolver,
                                                 RocketMqDelayLevelResolver delayLevels,
                                                 RocketMQMessageListenerContainerRegistrar registrar,
-                                                RocketMQProperties rocketMqProperties) {
-        RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper, delayLevels);
-        RocketMqEventSubscriber subscriber = new RocketMqEventSubscriber(registrar, rocketMqProperties);
+                                                RocketMQProperties rocketMqProperties,
+                                                RocketMqMessageProperties messageProperties) {
+        messageProperties.validate();
+        RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper, destinationResolver, delayLevels);
+        Function<String, EventSubscription> lookup = bindingLookup(messageProperties);
+        RocketMqEventSubscriber subscriber = new RocketMqEventSubscriber(registrar, rocketMqProperties, lookup);
         return new RocketMqMessageFacade(publisher, subscriber);
+    }
+
+    private static Function<String, EventSubscription> bindingLookup(RocketMqMessageProperties properties) {
+        Map<String, EventSubscription> bindings = new LinkedHashMap<>();
+        properties.getConsumers().forEach((name, binding) -> {
+            if (binding == null || !binding.isEnabled()) {
+                return;
+            }
+            bindings.put(name, new EventSubscription(
+                    binding.getDestination(),
+                    binding.getGroup(),
+                    binding.getMode()));
+        });
+        return name -> {
+            EventSubscription subscription = bindings.get(name);
+            if (subscription == null) {
+                throw new MessageException("CONFIGURATION_FAILED: consumer binding not found or disabled: " + name);
+            }
+            return subscription;
+        };
     }
 
     @Bean

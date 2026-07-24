@@ -8,6 +8,15 @@ lab:
         topic-prefix: "lab."
       delay-levels:
         10s: 3
+    consumers:
+      order-primary:
+        destination: lab.order-events
+        group: message-lab-order-primary
+        mode: CONCURRENT
+      order-audit:
+        destination: lab.order-events
+        group: message-lab-order-audit
+        mode: CONCURRENT
 
 rocketmq:
   name-server: 127.0.0.1:9876

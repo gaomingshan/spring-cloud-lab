@@ -1,9 +1,12 @@
 package com.lab.message.contract;
 
+/**
+ * Internal/channel description assembled from external configuration.
+ * Producer destinations are independent and must not be inferred from this type.
+ */
 public record EventSubscription(
         String destination,
         String consumerGroup,
-        String selector,
         ConsumptionMode consumptionMode
 ) {
     public EventSubscription {
@@ -13,7 +16,6 @@ public record EventSubscription(
         if (consumerGroup == null || consumerGroup.isBlank()) {
             throw new MessageException("VALIDATION_FAILED: subscription consumerGroup is required");
         }
-        selector = selector == null || selector.isBlank() ? "*" : selector;
         consumptionMode = consumptionMode == null ? ConsumptionMode.CONCURRENT : consumptionMode;
     }
 }

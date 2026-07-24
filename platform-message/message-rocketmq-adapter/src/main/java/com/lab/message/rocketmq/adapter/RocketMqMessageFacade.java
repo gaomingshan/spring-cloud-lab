@@ -5,7 +5,6 @@ import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
-import com.lab.message.contract.EventSubscription;
 import com.lab.message.contract.MessageException;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
@@ -31,13 +30,8 @@ public final class RocketMqMessageFacade implements EventPublisher, OrderedEvent
     }
 
     @Override
-    public void publish(String destination, BaseEvent event) {
-        publisher.publish(destination, event);
-    }
-
-    @Override
-    public void publishOrdered(BaseEvent event, String partitionKey) {
-        publisher.publishOrdered(event, partitionKey);
+    public void publishOrdered(BaseEvent event) {
+        publisher.publishOrdered(event);
     }
 
     @Override
@@ -51,9 +45,7 @@ public final class RocketMqMessageFacade implements EventPublisher, OrderedEvent
     }
 
     @Override
-    public <E extends BaseEvent> void subscribe(EventSubscription subscription,
-                                                Class<E> eventType,
-                                                EventHandler<E> handler) {
-        subscriber.subscribe(subscription, eventType, handler);
+    public <E extends BaseEvent> void bind(String bindingName, Class<E> eventType, EventHandler<E> handler) {
+        subscriber.bind(bindingName, eventType, handler);
     }
 }

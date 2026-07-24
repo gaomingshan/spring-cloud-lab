@@ -1,5 +1,6 @@
 package com.lab.message.rocketmq.adapter;
 
+import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.ConsumptionMode;
 import com.lab.message.contract.EventSubscription;
 import com.lab.message.contract.MessageException;
@@ -14,6 +15,10 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Locale;
 
+/**
+ * Adapts externalized {@link EventSubscription} to registrar metadata.
+ * Selector defaults to "*" — application-level filtering is preferred over broker tag DSL.
+ */
 public final class RocketMqListenerAnnotation {
     private RocketMqListenerAnnotation() {
     }
@@ -46,7 +51,7 @@ public final class RocketMqListenerAnnotation {
                 case "consumerGroup" -> subscription.consumerGroup();
                 case "topic" -> subscription.destination();
                 case "selectorType" -> selectorType();
-                case "selectorExpression" -> subscription.selector();
+                case "selectorExpression" -> "*";
                 case "consumeMode" -> consumeMode;
                 case "messageModel" -> messageModel();
                 case "annotationType" -> RocketMQMessageListener.class;

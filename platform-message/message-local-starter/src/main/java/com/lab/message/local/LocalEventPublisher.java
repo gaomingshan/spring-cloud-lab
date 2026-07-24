@@ -22,9 +22,4 @@ public class LocalEventPublisher implements EventPublisher {
         }
         applicationEventPublisher.publishEvent(new LocalMessageEvent(this, event));
     }
-
-    @Override
-    public void publish(String destination, BaseEvent event) {
-        publish(event);
-    }
 }

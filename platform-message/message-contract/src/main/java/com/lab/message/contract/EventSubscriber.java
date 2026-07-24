@@ -2,10 +2,8 @@ package com.lab.message.contract;
 
 public interface EventSubscriber {
     /**
-     * Bind a concrete event type to a subscription. {@code eventType} must be a concrete class
-     * (not {@link BaseEvent} and not abstract).
+     * Bind a concrete event type to an externally configured consumer binding.
+     * Channel settings come from configuration under {@code bindingName}, not from event annotations.
      */
-    <E extends BaseEvent> void subscribe(EventSubscription subscription,
-                                         Class<E> eventType,
-                                         EventHandler<E> handler);
+    <E extends BaseEvent> void bind(String bindingName, Class<E> eventType, EventHandler<E> handler);
 }

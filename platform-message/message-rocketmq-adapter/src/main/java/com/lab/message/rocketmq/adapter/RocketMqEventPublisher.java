@@ -17,53 +17,55 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
         DelayedEventPublisher, TransactionalEventPublisher {
     private final RocketMQTemplate template;
     private final RocketMqMessageMapper mapper;
+    private final RocketMqDestinationResolver destinationResolver;
     private final RocketMqDelayLevelResolver delayLevels;
 
     public RocketMqEventPublisher(RocketMQTemplate template,
                                   RocketMqMessageMapper mapper,
+                                  RocketMqDestinationResolver destinationResolver,
                                   RocketMqDelayLevelResolver delayLevels) {
-        if (template == null || mapper == null || delayLevels == null) {
+        if (template == null || mapper == null || destinationResolver == null || delayLevels == null) {
             throw new MessageException("CONFIGURATION_FAILED: RocketMQ publisher dependencies are required");
         }
         this.template = template;
         this.mapper = mapper;
+        this.destinationResolver = destinationResolver;
         this.delayLevels = delayLevels;
     }
 
     @Override
     public void publish(BaseEvent event) {
-        requireOk(template.syncSend(mapper.topic(event), mapper.map(event)), "ordinary");
+        String topic = EventDestinationSupport.resolve(event, destinationResolver);
+        requireOk(template.syncSend(topic, mapper.map(event)), "ordinary");
     }
 
     @Override
-    public void publish(String destination, BaseEvent event) {
-        if (destination == null || destination.isBlank()) {
-            throw new MessageException("VALIDATION_FAILED: destination is required");
-        }
-        requireOk(template.syncSend(destination, mapper.map(event)), "ordinary");
-    }
-
-    @Override
-    public void publishOrdered(BaseEvent event, String partitionKey) {
+    public void publishOrdered(BaseEvent event) {
+        String partitionKey = event == null ? null : event.resolvePartitionKey();
         if (partitionKey == null || partitionKey.isBlank()) {
-            throw new MessageException("VALIDATION_FAILED: partitionKey is required for ordered publishing");
+            throw new MessageException("VALIDATION_FAILED: partitionKey or aggregateId is required for ordered publishing");
         }
+        String topic = EventDestinationSupport.resolve(event, destinationResolver);
         Message<?> message = mapper.map(event);
-        requireOk(template.syncSendOrderly(mapper.topic(event), message, partitionKey), "ordered");
+        requireOk(template.syncSendOrderly(topic, message, partitionKey), "ordered");
     }
 
     @Override
     public void publishDelayed(BaseEvent event, Duration delay) {
         int level = delayLevels.resolve(delay);
+        String topic = EventDestinationSupport.resolve(event, destinationResolver);
         Message<?> message = mapper.map(event);
         long timeout = template.getProducer().getSendMsgTimeout();
-        requireOk(template.syncSend(mapper.topic(event), message, timeout, level), "delayed");
+        requireOk(template.syncSend(topic, message, timeout, level), "delayed");
     }
 
     @Override
     public void publishInTransaction(BaseEvent event) {
         try {
-            template.sendMessageInTransaction(mapper.topic(event), mapper.map(event), event);
+            String topic = EventDestinationSupport.resolve(event, destinationResolver);
+            template.sendMessageInTransaction(topic, mapper.map(event), event);
+        } catch (MessageException e) {
+            throw e;
         } catch (Exception e) {
             throw new MessageException("ROCKETMQ_TRANSACTION_FAILED: transaction send failed", e);
         }
