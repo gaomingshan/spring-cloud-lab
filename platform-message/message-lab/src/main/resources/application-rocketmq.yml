@@ -2,22 +2,32 @@ lab:
   message:
     local:
       enabled: false
+    # Native RocketMQ personalization (official rocketmq.* may still override)
     rocketmq:
+      enabled: true
+      name-server: 127.0.0.1:9876
+      producer:
+        group: ${spring.application.name}-producer
+        send-message-timeout: 3s
+        retry-times-when-send-failed: 2
+    # Adapter / message-contract facade (independent of native client knobs)
+    adapter:
       enabled: true
       naming:
         topic-prefix: "lab."
       delay-levels:
         10s: 3
-    consumers:
-      order-primary:
-        destination: lab.order-events
-        group: message-lab-order-primary
-        mode: CONCURRENT
-      order-audit:
-        destination: lab.order-events
-        group: message-lab-order-audit
-        mode: CONCURRENT
+      consumers:
+        order-primary:
+          destination: lab.order-events
+          group: message-lab-order-primary
+          mode: CONCURRENT
+        order-audit:
+          destination: lab.order-events
+          group: message-lab-order-audit
+          mode: CONCURRENT
 
+# Official Apache RocketMQ Spring keys (source of truth when set)
 rocketmq:
   name-server: 127.0.0.1:9876
   producer:

@@ -1,4 +1,4 @@
-package com.lab.message.rocketmq;
+package com.lab.message.rocketmq.adapter.config;
 
 import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.DelayedEventPublisher;
@@ -14,11 +14,13 @@ import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqEventSubscriber;
 import com.lab.message.rocketmq.adapter.RocketMqMessageFacade;
 import com.lab.message.rocketmq.adapter.RocketMqMessageMapper;
+import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQProperties;
 import org.apache.rocketmq.spring.core.RocketMQLocalTransactionListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -32,17 +34,24 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Adapter auto-configuration: wires message-contract facade onto native RocketMQ beans.
+ * <p>
+ * Kept separate from starter native personalization so "official rocketmq.*" and
+ * "lab facade/adapter" concerns stay readable and independent.
+ */
 @AutoConfiguration
-@EnableConfigurationProperties(RocketMqMessageProperties.class)
-@ConditionalOnClass(RocketMQTemplate.class)
-@ConditionalOnProperty(prefix = "lab.message.rocketmq", name = "enabled", havingValue = "true")
-public class RocketMqMessageAutoConfiguration {
+@AutoConfigureAfter(name = "org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration")
+@EnableConfigurationProperties(RocketMqAdapterProperties.class)
+@ConditionalOnClass({RocketMQTemplate.class, RocketMQAutoConfiguration.class})
+@ConditionalOnProperty(prefix = "lab.message.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class RocketMqAdapterAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(RocketMqDestinationResolver.class)
-    RocketMqDestinationResolver rocketMqDestinationResolver(RocketMqMessageProperties properties) {
+    RocketMqDestinationResolver rocketMqDestinationResolver(RocketMqAdapterProperties properties) {
         properties.validate();
-        String prefix = properties.getRocketmq().getNaming().getTopicPrefix();
+        String prefix = properties.getNaming().getTopicPrefix();
         return (BaseEvent event) -> {
             String seed = event.getEventType();
             if (seed == null || seed.isBlank()) {
@@ -63,8 +72,8 @@ public class RocketMqMessageAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(RocketMqDelayLevelResolver.class)
-    RocketMqDelayLevelResolver rocketMqDelayLevelResolver(RocketMqMessageProperties properties) {
-        return new RocketMqDelayLevelResolver(properties.getRocketmq().getDelayLevels());
+    RocketMqDelayLevelResolver rocketMqDelayLevelResolver(RocketMqAdapterProperties properties) {
+        return new RocketMqDelayLevelResolver(properties.getDelayLevels());
     }
 
     @Bean
@@ -77,15 +86,15 @@ public class RocketMqMessageAutoConfiguration {
                                                 RocketMqDelayLevelResolver delayLevels,
                                                 RocketMQMessageListenerContainerRegistrar registrar,
                                                 RocketMQProperties rocketMqProperties,
-                                                RocketMqMessageProperties messageProperties) {
-        messageProperties.validate();
+                                                RocketMqAdapterProperties adapterProperties) {
+        adapterProperties.validate();
         RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper, destinationResolver, delayLevels);
-        Function<String, EventSubscription> lookup = bindingLookup(messageProperties);
+        Function<String, EventSubscription> lookup = bindingLookup(adapterProperties);
         RocketMqEventSubscriber subscriber = new RocketMqEventSubscriber(registrar, rocketMqProperties, lookup);
         return new RocketMqMessageFacade(publisher, subscriber);
     }
 
-    private static Function<String, EventSubscription> bindingLookup(RocketMqMessageProperties properties) {
+    private static Function<String, EventSubscription> bindingLookup(RocketMqAdapterProperties properties) {
         Map<String, EventSubscription> bindings = new LinkedHashMap<>();
         properties.getConsumers().forEach((name, binding) -> {
             if (binding == null || !binding.isEnabled()) {
@@ -122,7 +131,7 @@ public class RocketMqMessageAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(DelayedEventPublisher.class)
     @ConditionalOnBean(RocketMqMessageFacade.class)
-    @ConditionalOnDelayLevels
+    @ConditionalOnAdapterDelayLevels
     DelayedEventPublisher delayedEventPublisher(RocketMqMessageFacade facade) {
         return facade;
     }

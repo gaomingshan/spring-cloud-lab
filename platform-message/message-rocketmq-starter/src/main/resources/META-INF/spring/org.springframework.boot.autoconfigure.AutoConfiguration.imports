@@ -1,1 +1,1 @@
-com.lab.message.rocketmq.RocketMqMessageAutoConfiguration
+com.lab.message.rocketmq.RocketMqNativeAutoConfiguration
