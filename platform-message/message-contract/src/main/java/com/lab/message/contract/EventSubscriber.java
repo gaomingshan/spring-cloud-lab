@@ -1,9 +1,13 @@
 package com.lab.message.contract;
 
 /**
- * Optional manual registration. Primary path is automatic discovery of
- * {@link EventConsumer}-annotated consumer methods.
+ * Registers {@link EventHandler} consumers. Channel identity comes from
+ * {@link EventConsumer} on the handler implementation class.
  */
 public interface EventSubscriber {
-    <E extends BaseEvent> void bind(Class<E> eventType, String topic, String group, EventHandler<E> handler);
+    /**
+     * Register a handler. The handler's concrete class must carry {@link EventConsumer}
+     * (topic + group). Event type is taken from the handler's type argument.
+     */
+    <E extends BaseEvent> void bind(EventHandler<E> handler);
 }

@@ -7,10 +7,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Consumer-side binding. Declared on the consumer function (method) or handler type.
- * Independent of {@link EventProducer} on the event class.
+ * Consumer binding on an {@link EventHandler} implementation type (not on arbitrary methods).
+ * One handler type maps to one topic + group. Independent of {@link EventProducer} on the event class.
  */
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface EventConsumer {

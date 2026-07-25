@@ -34,7 +34,7 @@ public final class RocketMqMessageFacade implements EventPublisher, EventSubscri
     }
 
     @Override
-    public <E extends BaseEvent> void bind(Class<E> eventType, String topic, String group, EventHandler<E> handler) {
-        subscriber.bind(eventType, topic, group, handler);
+    public <E extends BaseEvent> void bind(EventHandler<E> handler) {
+        subscriber.bind(handler);
     }
 }
