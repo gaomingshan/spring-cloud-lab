@@ -6,6 +6,8 @@ import com.lab.message.contract.MessageException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationEventPublisher;
 
+import java.time.Duration;
+
 @RequiredArgsConstructor
 public class LocalEventPublisher implements EventPublisher {
     private final ApplicationEventPublisher applicationEventPublisher;
@@ -16,5 +18,20 @@ public class LocalEventPublisher implements EventPublisher {
             throw new MessageException("VALIDATION_FAILED: event is null");
         }
         applicationEventPublisher.publishEvent(new LocalMessageEvent(this, event));
+    }
+
+    @Override
+    public void publishOrdered(BaseEvent event) {
+        publish(event);
+    }
+
+    @Override
+    public void publishDelayed(BaseEvent event, Duration delay) {
+        publish(event);
+    }
+
+    @Override
+    public void publishInTransaction(BaseEvent event) {
+        publish(event);
     }
 }

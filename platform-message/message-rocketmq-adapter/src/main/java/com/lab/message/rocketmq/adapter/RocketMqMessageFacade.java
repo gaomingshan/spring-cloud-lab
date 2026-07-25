@@ -1,19 +1,15 @@
 package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.BaseEvent;
-import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
-import com.lab.message.contract.OrderedEventPublisher;
-import com.lab.message.contract.TransactionalEventPublisher;
 import lombok.RequiredArgsConstructor;
 
 import java.time.Duration;
 
 @RequiredArgsConstructor
-public final class RocketMqMessageFacade implements EventPublisher, OrderedEventPublisher,
-        DelayedEventPublisher, TransactionalEventPublisher, EventSubscriber {
+public final class RocketMqMessageFacade implements EventPublisher, EventSubscriber {
     private final RocketMqEventPublisher publisher;
     private final RocketMqEventSubscriber subscriber;
 

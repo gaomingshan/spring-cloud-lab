@@ -1,10 +1,7 @@
 package com.lab.message.rocketmq.adapter.config;
 
-import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
-import com.lab.message.contract.OrderedEventPublisher;
-import com.lab.message.contract.TransactionalEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqConsumerRegistrar;
 import com.lab.message.rocketmq.adapter.RocketMqDelayLevelResolver;
 import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
@@ -12,7 +9,6 @@ import com.lab.message.rocketmq.adapter.RocketMqEventSubscriber;
 import com.lab.message.rocketmq.adapter.RocketMqMessageFacade;
 import com.lab.message.rocketmq.adapter.RocketMqMessageMapper;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
-import org.apache.rocketmq.spring.core.RocketMQLocalTransactionListener;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
@@ -71,28 +67,6 @@ public class RocketMqAdapterAutoConfiguration {
     @ConditionalOnMissingBean(EventPublisher.class)
     @ConditionalOnBean(RocketMqMessageFacade.class)
     EventPublisher eventPublisher(RocketMqMessageFacade facade) {
-        return facade;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(OrderedEventPublisher.class)
-    @ConditionalOnBean(RocketMqMessageFacade.class)
-    OrderedEventPublisher orderedEventPublisher(RocketMqMessageFacade facade) {
-        return facade;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(DelayedEventPublisher.class)
-    @ConditionalOnBean(RocketMqMessageFacade.class)
-    @ConditionalOnAdapterDelayLevels
-    DelayedEventPublisher delayedEventPublisher(RocketMqMessageFacade facade) {
-        return facade;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(TransactionalEventPublisher.class)
-    @ConditionalOnBean({RocketMqMessageFacade.class, RocketMQLocalTransactionListener.class})
-    TransactionalEventPublisher transactionalEventPublisher(RocketMqMessageFacade facade) {
         return facade;
     }
 

@@ -1,11 +1,8 @@
 package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.BaseEvent;
-import com.lab.message.contract.DelayedEventPublisher;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.MessageException;
-import com.lab.message.contract.OrderedEventPublisher;
-import com.lab.message.contract.TransactionalEventPublisher;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
@@ -15,8 +12,7 @@ import org.springframework.messaging.Message;
 import java.time.Duration;
 
 @RequiredArgsConstructor
-public final class RocketMqEventPublisher implements EventPublisher, OrderedEventPublisher,
-        DelayedEventPublisher, TransactionalEventPublisher {
+public final class RocketMqEventPublisher implements EventPublisher {
     private final RocketMQTemplate template;
     private final RocketMqMessageMapper mapper;
     private final RocketMqDelayLevelResolver delayLevels;
