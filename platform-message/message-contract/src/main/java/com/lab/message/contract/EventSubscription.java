@@ -1,21 +1,17 @@
 package com.lab.message.contract;
 
 /**
- * Internal/channel description assembled from external configuration.
- * Producer destinations are independent and must not be inferred from this type.
+ * Resolved consumer endpoint (topic + group). Built from {@link EventConsumer}, not from event types.
  */
-public record EventSubscription(
-        String destination,
-        String consumerGroup,
-        ConsumptionMode consumptionMode
-) {
+public record EventSubscription(String topic, String group) {
     public EventSubscription {
-        if (destination == null || destination.isBlank()) {
-            throw new MessageException("VALIDATION_FAILED: subscription destination is required");
+        if (topic == null || topic.isBlank()) {
+            throw new MessageException("VALIDATION_FAILED: consumer topic is required");
         }
-        if (consumerGroup == null || consumerGroup.isBlank()) {
-            throw new MessageException("VALIDATION_FAILED: subscription consumerGroup is required");
+        if (group == null || group.isBlank()) {
+            throw new MessageException("VALIDATION_FAILED: consumer group is required");
         }
-        consumptionMode = consumptionMode == null ? ConsumptionMode.CONCURRENT : consumptionMode;
+        topic = topic.trim();
+        group = group.trim();
     }
 }

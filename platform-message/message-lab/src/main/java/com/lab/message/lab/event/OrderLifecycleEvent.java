@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lab.message.contract.BaseEvent;
-import com.lab.message.contract.EventDestination;
+import com.lab.message.contract.EventProducer;
 import com.lab.message.contract.MessageException;
 import com.lab.message.lab.event.model.OrderCancelModel;
 import com.lab.message.lab.event.model.OrderCreateModel;
@@ -14,7 +14,7 @@ import lombok.Getter;
 import java.time.Instant;
 import java.util.Map;
 
-@EventDestination("lab.order-events")
+@EventProducer(topic = "lab.order-events")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Getter
 public final class OrderLifecycleEvent extends BaseEvent {

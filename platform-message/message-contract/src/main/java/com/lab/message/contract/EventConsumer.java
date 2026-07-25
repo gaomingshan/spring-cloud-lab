@@ -7,11 +7,14 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Producer-side destination only. Independent of consumer destinations (which are externalized).
+ * Consumer-side binding. Declared on the consumer function (method) or handler type.
+ * Independent of {@link EventProducer} on the event class.
  */
-@Target(ElementType.TYPE)
+@Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface EventDestination {
-    String value();
+public @interface EventConsumer {
+    String topic();
+
+    String group();
 }

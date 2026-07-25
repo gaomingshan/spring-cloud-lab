@@ -19,12 +19,11 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
         DelayedEventPublisher, TransactionalEventPublisher {
     private final RocketMQTemplate template;
     private final RocketMqMessageMapper mapper;
-    private final RocketMqDestinationResolver destinationResolver;
     private final RocketMqDelayLevelResolver delayLevels;
 
     @Override
     public void publish(BaseEvent event) {
-        String topic = EventDestinationSupport.resolve(event, destinationResolver);
+        String topic = EventProducerSupport.resolveTopic(event);
         requireOk(template.syncSend(topic, mapper.map(event)), "ordinary");
     }
 
@@ -34,7 +33,7 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
         if (partitionKey == null || partitionKey.isBlank()) {
             throw new MessageException("VALIDATION_FAILED: partitionKey or aggregateId is required for ordered publishing");
         }
-        String topic = EventDestinationSupport.resolve(event, destinationResolver);
+        String topic = EventProducerSupport.resolveTopic(event);
         Message<?> message = mapper.map(event);
         requireOk(template.syncSendOrderly(topic, message, partitionKey), "ordered");
     }
@@ -42,7 +41,7 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
     @Override
     public void publishDelayed(BaseEvent event, Duration delay) {
         int level = delayLevels.resolve(delay);
-        String topic = EventDestinationSupport.resolve(event, destinationResolver);
+        String topic = EventProducerSupport.resolveTopic(event);
         Message<?> message = mapper.map(event);
         long timeout = template.getProducer().getSendMsgTimeout();
         requireOk(template.syncSend(topic, message, timeout, level), "delayed");
@@ -51,7 +50,7 @@ public final class RocketMqEventPublisher implements EventPublisher, OrderedEven
     @Override
     public void publishInTransaction(BaseEvent event) {
         try {
-            String topic = EventDestinationSupport.resolve(event, destinationResolver);
+            String topic = EventProducerSupport.resolveTopic(event);
             template.sendMessageInTransaction(topic, mapper.map(event), event);
         } catch (MessageException e) {
             throw e;
