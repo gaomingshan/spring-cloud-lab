@@ -2,24 +2,17 @@ lab:
   message:
     local:
       enabled: false
-    rocketmq:
-      enabled: true
-      name-server: 127.0.0.1:9876
-      producer:
-        group: ${spring.application.name}-producer
-        send-message-timeout: 3s
-        retry-times-when-send-failed: 2
     adapter:
       enabled: true
       delay-levels:
         10s: 3
-      # Optional overlays only (topic -> group -> raw attrs). Identity comes from @EventConsumer.
       consumers:
         lab.order-events:
           message-lab-order-primary:
             consumeMode: CONCURRENTLY
           message-lab-order-audit: {}
 
+# Official Apache RocketMQ Spring (sole native config source)
 rocketmq:
   name-server: 127.0.0.1:9876
   producer:

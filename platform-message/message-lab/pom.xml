@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>com.lab</groupId>
-            <artifactId>message-rocketmq-starter</artifactId>
+            <artifactId>message-rocketmq-adapter</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

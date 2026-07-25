@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 public class LocalMessageAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(EventPublisher.class)
-    @ConditionalOnProperty(prefix = "lab.message.rocketmq", name = "enabled", havingValue = "false", matchIfMissing = true)
+    @ConditionalOnProperty(prefix = "lab.message.adapter", name = "enabled", havingValue = "false", matchIfMissing = true)
     LocalEventPublisher localEventPublisher(ApplicationEventPublisher applicationEventPublisher) {
         return new LocalEventPublisher(applicationEventPublisher);
     }
