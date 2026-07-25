@@ -2,7 +2,6 @@ package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.MessageException;
-import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.support.RocketMQHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;

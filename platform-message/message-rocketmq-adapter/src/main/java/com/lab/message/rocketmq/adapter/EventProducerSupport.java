@@ -13,7 +13,7 @@ public final class EventProducerSupport {
             throw new MessageException("VALIDATION_FAILED: event is null");
         }
         Class<?> type = event.getClass();
-        if (type == BaseEvent.class || java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
+        if (java.lang.reflect.Modifier.isAbstract(type.getModifiers())) {
             throw new MessageException("VALIDATION_FAILED: publish requires a concrete event type");
         }
         EventProducer producer = type.getAnnotation(EventProducer.class);
