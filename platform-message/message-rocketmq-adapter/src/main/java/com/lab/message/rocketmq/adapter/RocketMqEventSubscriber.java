@@ -1,11 +1,11 @@
 package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.BaseEvent;
-import com.lab.message.contract.ConsumptionMode;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventSubscriber;
 import com.lab.message.contract.EventSubscription;
 import com.lab.message.contract.MessageException;
+import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQProperties;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -15,21 +15,11 @@ import java.lang.reflect.Modifier;
 import java.util.Map;
 import java.util.function.Function;
 
+@RequiredArgsConstructor
 public final class RocketMqEventSubscriber implements EventSubscriber {
     private final RocketMQMessageListenerContainerRegistrar registrar;
     private final RocketMQProperties properties;
     private final Function<String, EventSubscription> bindingLookup;
-
-    public RocketMqEventSubscriber(RocketMQMessageListenerContainerRegistrar registrar,
-                                   RocketMQProperties properties,
-                                   Function<String, EventSubscription> bindingLookup) {
-        if (registrar == null || properties == null || bindingLookup == null) {
-            throw new MessageException("CONFIGURATION_FAILED: RocketMQ subscriber dependencies are required");
-        }
-        this.registrar = registrar;
-        this.properties = properties;
-        this.bindingLookup = bindingLookup;
-    }
 
     public static Function<String, EventSubscription> lookupFromMap(Map<String, EventSubscription> bindings) {
         Map<String, EventSubscription> copy = bindings == null ? Map.of() : Map.copyOf(bindings);
@@ -59,14 +49,10 @@ public final class RocketMqEventSubscriber implements EventSubscriber {
         registrar.registerContainer(beanName, new TypedListener<>(eventType, handler), annotation);
     }
 
+    @RequiredArgsConstructor
     private static final class TypedListener<E extends BaseEvent> implements RocketMQListener<E> {
         private final Class<E> eventType;
         private final EventHandler<E> handler;
-
-        private TypedListener(Class<E> eventType, EventHandler<E> handler) {
-            this.eventType = eventType;
-            this.handler = handler;
-        }
 
         @Override
         public void onMessage(E event) {

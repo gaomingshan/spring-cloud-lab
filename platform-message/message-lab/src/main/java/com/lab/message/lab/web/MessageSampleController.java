@@ -7,6 +7,7 @@ import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
 import com.lab.message.lab.event.OrderLifecycleEvent;
 import com.lab.message.lab.support.SampleEvents;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,21 +21,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/sample", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequiredArgsConstructor
 public class MessageSampleController {
     private final EventPublisher publisher;
     private final ObjectProvider<OrderedEventPublisher> orderedPublisher;
     private final ObjectProvider<DelayedEventPublisher> delayedPublisher;
     private final ObjectProvider<TransactionalEventPublisher> transactionalPublisher;
-
-    public MessageSampleController(EventPublisher publisher,
-                                   ObjectProvider<OrderedEventPublisher> orderedPublisher,
-                                   ObjectProvider<DelayedEventPublisher> delayedPublisher,
-                                   ObjectProvider<TransactionalEventPublisher> transactionalPublisher) {
-        this.publisher = publisher;
-        this.orderedPublisher = orderedPublisher;
-        this.delayedPublisher = delayedPublisher;
-        this.transactionalPublisher = transactionalPublisher;
-    }
 
     @GetMapping("/info")
     public Map<String, Object> info() {
@@ -83,7 +75,7 @@ public class MessageSampleController {
     public Map<String, String> delayed() {
         DelayedEventPublisher capability = delayedPublisher.getIfAvailable();
         if (capability == null) {
-            throw unavailable("delayed publisher is not configured (set lab.message.rocketmq.delay-levels)");
+            throw unavailable("delayed publisher is not configured (set lab.message.adapter.delay-levels)");
         }
         OrderLifecycleEvent event = SampleEvents.orderCreated();
         capability.publishDelayed(event, Duration.ofSeconds(10));

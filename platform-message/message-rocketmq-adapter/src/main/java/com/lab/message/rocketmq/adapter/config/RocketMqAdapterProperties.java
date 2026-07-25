@@ -2,7 +2,6 @@ package com.lab.message.rocketmq.adapter.config;
 
 import com.lab.message.contract.ConsumptionMode;
 import com.lab.message.contract.MessageException;
-import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,21 +11,29 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Adapter-layer (message-contract facade) configuration only. Native RocketMQ client settings remain under {@code rocketmq.*} /
- * lab native personalization.
+ * Adapter-layer (message-contract facade) configuration only.
+ * Native RocketMQ client settings remain under {@code rocketmq.*} / lab native personalization.
  */
-@Data
+@Getter
+@Setter
 @ConfigurationProperties(prefix = "lab.message.adapter")
 public class RocketMqAdapterProperties {
-
-    /**
-     * Enable message-contract facade over RocketMQ.
-     */
     private boolean enabled = true;
-
     private Naming naming = new Naming();
     private Map<Duration, Integer> delayLevels = new LinkedHashMap<>();
     private Map<String, ConsumerBinding> consumers = new LinkedHashMap<>();
+
+    public void setDelayLevels(Map<Duration, Integer> delayLevels) {
+        this.delayLevels = delayLevels == null ? new LinkedHashMap<>() : new LinkedHashMap<>(delayLevels);
+    }
+
+    public void setConsumers(Map<String, ConsumerBinding> consumers) {
+        this.consumers = consumers == null ? new LinkedHashMap<>() : new LinkedHashMap<>(consumers);
+    }
+
+    public void setNaming(Naming naming) {
+        this.naming = naming == null ? new Naming() : naming;
+    }
 
     public void validate() {
         if (naming == null || naming.topicPrefix == null || naming.topicPrefix.isBlank()) {
@@ -48,19 +55,15 @@ public class RocketMqAdapterProperties {
         });
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class Naming {
-
-        /**
-         * Fallback producer topic prefix when {@code @EventDestination} is absent.
-         */
         private String topicPrefix = "lab.";
-
     }
 
-    @Data
+    @Getter
+    @Setter
     public static class ConsumerBinding {
-
         private String destination;
         private String group;
         private ConsumptionMode mode = ConsumptionMode.CONCURRENT;
@@ -71,8 +74,7 @@ public class RocketMqAdapterProperties {
                 return;
             }
             if (destination == null || destination.isBlank()) {
-                throw new MessageException(
-                    "CONFIGURATION_FAILED: lab.message.adapter.consumers." + name + ".destination is required");
+                throw new MessageException("CONFIGURATION_FAILED: lab.message.adapter.consumers." + name + ".destination is required");
             }
             if (group == null || group.isBlank()) {
                 throw new MessageException("CONFIGURATION_FAILED: lab.message.adapter.consumers." + name + ".group is required");

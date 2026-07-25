@@ -3,9 +3,11 @@ package com.lab.message.lab.event.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lab.message.contract.MessageException;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
+@Getter
 public final class OrderPaymentModel {
     private final String orderId;
     private final String paymentId;
@@ -34,9 +36,4 @@ public final class OrderPaymentModel {
         this.channel = channel;
         this.amount = amount;
     }
-
-    public String getOrderId() { return orderId; }
-    public String getPaymentId() { return paymentId; }
-    public String getChannel() { return channel; }
-    public BigDecimal getAmount() { return amount; }
 }

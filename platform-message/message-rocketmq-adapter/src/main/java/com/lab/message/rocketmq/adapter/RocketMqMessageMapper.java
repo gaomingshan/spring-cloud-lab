@@ -2,6 +2,7 @@ package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.MessageException;
+import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.support.RocketMQHeaders;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
@@ -15,7 +16,7 @@ public final class RocketMqMessageMapper {
                 || java.lang.reflect.Modifier.isAbstract(event.getClass().getModifiers())) {
             throw new MessageException("VALIDATION_FAILED: publish requires a concrete event type");
         }
-        MessageBuilder<?> builder = MessageBuilder.withPayload(event)
+        return MessageBuilder.withPayload(event)
                 .setHeader(RocketMQHeaders.KEYS, event.resolveIdempotencyKey())
                 .setHeader("lab.event-id", event.getEventId())
                 .setHeader("lab.event-class", event.getClass().getName())
@@ -23,7 +24,7 @@ public final class RocketMqMessageMapper {
                 .setHeader("lab.producer", event.getProducer())
                 .setHeader("lab.aggregate-type", event.getAggregateType())
                 .setHeader("lab.aggregate-id", event.getAggregateId())
-                .copyHeaders(event.getHeaders());
-        return builder.build();
+                .copyHeaders(event.getHeaders())
+                .build();
     }
 }

@@ -6,6 +6,7 @@ import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.MessageException;
 import com.lab.message.contract.OrderedEventPublisher;
 import com.lab.message.contract.TransactionalEventPublisher;
+import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -13,25 +14,13 @@ import org.springframework.messaging.Message;
 
 import java.time.Duration;
 
+@RequiredArgsConstructor
 public final class RocketMqEventPublisher implements EventPublisher, OrderedEventPublisher,
         DelayedEventPublisher, TransactionalEventPublisher {
     private final RocketMQTemplate template;
     private final RocketMqMessageMapper mapper;
     private final RocketMqDestinationResolver destinationResolver;
     private final RocketMqDelayLevelResolver delayLevels;
-
-    public RocketMqEventPublisher(RocketMQTemplate template,
-                                  RocketMqMessageMapper mapper,
-                                  RocketMqDestinationResolver destinationResolver,
-                                  RocketMqDelayLevelResolver delayLevels) {
-        if (template == null || mapper == null || destinationResolver == null || delayLevels == null) {
-            throw new MessageException("CONFIGURATION_FAILED: RocketMQ publisher dependencies are required");
-        }
-        this.template = template;
-        this.mapper = mapper;
-        this.destinationResolver = destinationResolver;
-        this.delayLevels = delayLevels;
-    }
 
     @Override
     public void publish(BaseEvent event) {

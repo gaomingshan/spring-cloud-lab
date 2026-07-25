@@ -9,16 +9,14 @@ import com.lab.message.contract.MessageException;
 import com.lab.message.lab.event.model.OrderCancelModel;
 import com.lab.message.lab.event.model.OrderCreateModel;
 import com.lab.message.lab.event.model.OrderPaymentModel;
+import lombok.Getter;
 
 import java.time.Instant;
 import java.util.Map;
 
-/**
- * Producer destination is declared here; consumer destinations are externalized in configuration
- * and need not match this value.
- */
 @EventDestination("lab.order-events")
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Getter
 public final class OrderLifecycleEvent extends BaseEvent {
     private final OrderPhase phase;
     private final OrderCreateModel create;
@@ -68,22 +66,6 @@ public final class OrderLifecycleEvent extends BaseEvent {
                 }
             }
         }
-    }
-
-    public OrderPhase getPhase() {
-        return phase;
-    }
-
-    public OrderCreateModel getCreate() {
-        return create;
-    }
-
-    public OrderPaymentModel getPayment() {
-        return payment;
-    }
-
-    public OrderCancelModel getCancel() {
-        return cancel;
     }
 
     public static OrderLifecycleEvent created(String eventId, String producer, OrderCreateModel create) {

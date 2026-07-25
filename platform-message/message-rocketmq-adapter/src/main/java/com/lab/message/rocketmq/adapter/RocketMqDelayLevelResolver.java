@@ -1,10 +1,12 @@
 package com.lab.message.rocketmq.adapter;
 
 import com.lab.message.contract.MessageException;
+import lombok.Getter;
 
 import java.time.Duration;
 import java.util.Map;
 
+@Getter
 public final class RocketMqDelayLevelResolver {
     private final Map<Duration, Integer> delayLevels;
 

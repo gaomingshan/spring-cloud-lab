@@ -3,7 +3,9 @@ package com.lab.message.lab.event.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lab.message.contract.MessageException;
+import lombok.Getter;
 
+@Getter
 public final class OrderCancelModel {
     private final String orderId;
     private final String reason;
@@ -20,7 +22,4 @@ public final class OrderCancelModel {
         this.orderId = orderId;
         this.reason = reason;
     }
-
-    public String getOrderId() { return orderId; }
-    public String getReason() { return reason; }
 }

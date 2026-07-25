@@ -1,8 +1,10 @@
 package com.lab.message.local;
 
 import com.lab.message.contract.BaseEvent;
+import lombok.Getter;
 import org.springframework.context.ApplicationEvent;
 
+@Getter
 public final class LocalMessageEvent extends ApplicationEvent {
     private final BaseEvent event;
 
@@ -11,6 +13,7 @@ public final class LocalMessageEvent extends ApplicationEvent {
         this.event = event;
     }
 
+    /** Compatibility alias used by lab sample. */
     public BaseEvent event() {
         return event;
     }

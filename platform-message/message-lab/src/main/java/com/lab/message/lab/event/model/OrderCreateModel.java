@@ -3,10 +3,12 @@ package com.lab.message.lab.event.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.lab.message.contract.MessageException;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+@Getter
 public final class OrderCreateModel {
     private final String orderId;
     private final List<String> skuIds;
@@ -29,8 +31,4 @@ public final class OrderCreateModel {
         this.skuIds = List.copyOf(skuIds);
         this.amount = amount;
     }
-
-    public String getOrderId() { return orderId; }
-    public List<String> getSkuIds() { return skuIds; }
-    public BigDecimal getAmount() { return amount; }
 }
