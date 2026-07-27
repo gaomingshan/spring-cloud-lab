@@ -23,8 +23,4 @@ public class LocalEventPublisher implements EventPublisher {
         publish(event);
     }
 
-    @Override
-    public void publishInTransaction(BaseEvent event) {
-        publish(event);
-    }
 }

@@ -22,11 +22,6 @@ public final class RocketMqMessageFacade implements EventPublisher, EventSubscri
     }
 
     @Override
-    public void publishInTransaction(BaseEvent event) {
-        publisher.publishInTransaction(event);
-    }
-
-    @Override
     public <E extends BaseEvent> void bind(EventHandler<E> handler) {
         subscriber.bind(handler);
     }

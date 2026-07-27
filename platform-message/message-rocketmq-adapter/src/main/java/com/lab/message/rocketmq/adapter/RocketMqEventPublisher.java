@@ -31,18 +31,6 @@ public final class RocketMqEventPublisher implements EventPublisher {
         requireOk(template.syncSendOrderly(topic, message, partitionKey), "ordered");
     }
 
-    @Override
-    public void publishInTransaction(BaseEvent event) {
-        try {
-            String topic = EventProducerSupport.resolveTopic(event);
-            template.sendMessageInTransaction(topic, mapper.map(event), event);
-        } catch (MessageException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new MessageException("ROCKETMQ_TRANSACTION_FAILED: transaction send failed", e);
-        }
-    }
-
     private static void requireOk(SendResult result, String mode) {
         if (result == null || result.getSendStatus() != SendStatus.SEND_OK) {
             throw new MessageException("ROCKETMQ_" + mode.toUpperCase() + "_SEND_FAILED");

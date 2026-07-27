@@ -4,7 +4,7 @@ import java.time.Duration;
 
 /**
  * Unified event publishing API. Middleware-specific capabilities must be explicitly
- * implemented by an adapter; delayed delivery is unsupported by default.
+ * implemented by an adapter; delayed and transactional delivery are unsupported by default.
  */
 public interface EventPublisher {
     void publish(BaseEvent event);
@@ -15,5 +15,7 @@ public interface EventPublisher {
         throw new MessageException("CAPABILITY_UNAVAILABLE: delayed event publishing is not supported");
     }
 
-    void publishInTransaction(BaseEvent event);
+    default void publishInTransaction(BaseEvent event) {
+        throw new MessageException("CAPABILITY_UNAVAILABLE: transactional event publishing is not supported");
+    }
 }

@@ -54,13 +54,6 @@ public class MessageSampleController {
         return result("ordered", event);
     }
 
-    @PostMapping("/transactional")
-    public Map<String, String> transactional() {
-        OrderLifecycleEvent event = SampleEvents.orderCreated();
-        publisher.publishInTransaction(event);
-        return result("transactional", event);
-    }
-
     private static Map<String, String> result(String mode, OrderLifecycleEvent event) {
         return Map.of(
                 "mode", mode,
