@@ -3,7 +3,6 @@ package com.lab.message.rocketmq.adapter.config;
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
 import com.lab.message.rocketmq.adapter.RocketMqConsumerRegistrar;
-import com.lab.message.rocketmq.adapter.RocketMqDelayLevelResolver;
 import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqEventSubscriber;
 import com.lab.message.rocketmq.adapter.RocketMqMessageFacade;
@@ -36,23 +35,16 @@ public class RocketMqAdapterAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnMissingBean(RocketMqDelayLevelResolver.class)
-    RocketMqDelayLevelResolver rocketMqDelayLevelResolver(RocketMqAdapterProperties properties) {
-        return new RocketMqDelayLevelResolver(properties.getDelayLevels());
-    }
-
-    @Bean
     @Primary
     @ConditionalOnMissingBean(RocketMqMessageFacade.class)
     @ConditionalOnBean({RocketMQTemplate.class, RocketMQMessageListenerContainerRegistrar.class})
     RocketMqMessageFacade rocketMqMessageFacade(
         RocketMQTemplate template,
         RocketMqMessageMapper mapper,
-        RocketMqDelayLevelResolver delayLevels,
         RocketMQMessageListenerContainerRegistrar registrar,
         RocketMqAdapterProperties adapterProperties
     ) {
-        RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper, delayLevels);
+        RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper);
         RocketMqEventSubscriber subscriber = new RocketMqEventSubscriber(registrar, adapterProperties);
         return new RocketMqMessageFacade(publisher, subscriber);
     }

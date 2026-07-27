@@ -4,8 +4,6 @@ lab:
       enabled: false
     adapter:
       enabled: true
-      delay-levels:
-        10s: 3
       consumers:
         lab.order-events:
           message-lab-order-primary:

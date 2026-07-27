@@ -6,8 +6,6 @@ import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
 import lombok.RequiredArgsConstructor;
 
-import java.time.Duration;
-
 @RequiredArgsConstructor
 public final class RocketMqMessageFacade implements EventPublisher, EventSubscriber {
     private final RocketMqEventPublisher publisher;
@@ -21,11 +19,6 @@ public final class RocketMqMessageFacade implements EventPublisher, EventSubscri
     @Override
     public void publishOrdered(BaseEvent event) {
         publisher.publishOrdered(event);
-    }
-
-    @Override
-    public void publishDelayed(BaseEvent event, Duration delay) {
-        publisher.publishDelayed(event, delay);
     }
 
     @Override

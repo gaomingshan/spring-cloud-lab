@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -54,13 +52,6 @@ public class MessageSampleController {
         OrderLifecycleEvent event = SampleEvents.orderCreated();
         publisher.publishOrdered(event);
         return result("ordered", event);
-    }
-
-    @PostMapping("/delayed")
-    public Map<String, String> delayed() {
-        OrderLifecycleEvent event = SampleEvents.orderCreated();
-        publisher.publishDelayed(event, Duration.ofSeconds(10));
-        return result("delayed", event);
     }
 
     @PostMapping("/transactional")

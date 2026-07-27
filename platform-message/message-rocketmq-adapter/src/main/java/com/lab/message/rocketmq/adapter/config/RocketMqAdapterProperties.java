@@ -4,7 +4,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
-import java.time.Duration;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -18,16 +17,11 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "lab.message.adapter")
 public class RocketMqAdapterProperties {
     private boolean enabled = true;
-    private Map<Duration, Integer> delayLevels = new LinkedHashMap<>();
     /**
      * Optional overlay for native listener attributes: topic -&gt; group -&gt; attrs.
      * Keys should match RocketMQMessageListener attribute names.
      */
     private Map<String, Map<String, Map<String, Object>>> consumers = new LinkedHashMap<>();
-
-    public void setDelayLevels(Map<Duration, Integer> delayLevels) {
-        this.delayLevels = delayLevels == null ? new LinkedHashMap<>() : new LinkedHashMap<>(delayLevels);
-    }
 
     public void setConsumers(Map<String, Map<String, Map<String, Object>>> consumers) {
         this.consumers = consumers == null ? new LinkedHashMap<>() : new LinkedHashMap<>(consumers);

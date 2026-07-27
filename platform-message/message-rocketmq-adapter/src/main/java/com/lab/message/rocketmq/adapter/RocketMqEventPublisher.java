@@ -9,13 +9,10 @@ import org.apache.rocketmq.client.producer.SendStatus;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.springframework.messaging.Message;
 
-import java.time.Duration;
-
 @RequiredArgsConstructor
 public final class RocketMqEventPublisher implements EventPublisher {
     private final RocketMQTemplate template;
     private final RocketMqMessageMapper mapper;
-    private final RocketMqDelayLevelResolver delayLevels;
 
     @Override
     public void publish(BaseEvent event) {
@@ -32,15 +29,6 @@ public final class RocketMqEventPublisher implements EventPublisher {
         String topic = EventProducerSupport.resolveTopic(event);
         Message<?> message = mapper.map(event);
         requireOk(template.syncSendOrderly(topic, message, partitionKey), "ordered");
-    }
-
-    @Override
-    public void publishDelayed(BaseEvent event, Duration delay) {
-        int level = delayLevels.resolve(delay);
-        String topic = EventProducerSupport.resolveTopic(event);
-        Message<?> message = mapper.map(event);
-        long timeout = template.getProducer().getSendMsgTimeout();
-        requireOk(template.syncSend(topic, message, timeout, level), "delayed");
     }
 
     @Override
