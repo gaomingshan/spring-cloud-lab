@@ -2,10 +2,10 @@ package com.lab.message.rocketmq.adapter.config;
 
 import com.lab.message.contract.EventPublisher;
 import com.lab.message.contract.EventSubscriber;
-import com.lab.message.rocketmq.adapter.RocketMqConsumerRegistrar;
-import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
-import com.lab.message.rocketmq.adapter.RocketMqEventSubscriber;
-import com.lab.message.rocketmq.adapter.RocketMqMessageMapper;
+import com.lab.message.rocketmq.adapter.publisher.RocketMqEventPublisher;
+import com.lab.message.rocketmq.adapter.subscriber.RocketMqConsumerRegistrar;
+import com.lab.message.rocketmq.adapter.subscriber.RocketMqEventSubscriber;
+import com.lab.message.rocketmq.adapter.support.RocketMqMessageMapper;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
 import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;

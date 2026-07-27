@@ -1,4 +1,4 @@
-package com.lab.message.rocketmq.adapter;
+package com.lab.message.rocketmq.adapter.subscriber;
 
 import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.EventConsumer;

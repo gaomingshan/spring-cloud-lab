@@ -1,4 +1,4 @@
-package com.lab.message.rocketmq.adapter;
+package com.lab.message.rocketmq.adapter.support;
 
 import com.lab.message.rocketmq.adapter.config.RocketMqAdapterProperties.ConsumerProperties;
 

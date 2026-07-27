@@ -1,4 +1,4 @@
-package com.lab.message.rocketmq.adapter;
+package com.lab.message.rocketmq.adapter.support;
 
 public final class RocketMqMessageHeaders {
     public static final String EVENT_ID = "lab.event-id";

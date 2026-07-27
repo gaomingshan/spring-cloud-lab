@@ -1,7 +1,8 @@
-package com.lab.message.rocketmq.adapter;
+package com.lab.message.rocketmq.adapter.subscriber;
 
 import com.lab.message.contract.BaseEvent;
 import com.lab.message.rocketmq.adapter.config.RocketMqAdapterProperties;
+import com.lab.message.rocketmq.adapter.support.RocketMqListenerAnnotationFactory;
 import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.springframework.core.annotation.AnnotationUtils;
