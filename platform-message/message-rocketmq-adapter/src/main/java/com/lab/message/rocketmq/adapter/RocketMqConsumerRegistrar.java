@@ -13,12 +13,13 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.util.ClassUtils;
 
 /**
- * Auto-registers only {@link EventHandler} beans that are annotated with {@link EventConsumer}.
- * Arbitrary class methods are not supported.
+ * Auto-registers only {@link EventHandler} beans that are annotated with {@link EventConsumer}. Arbitrary class methods are not
+ * supported.
  */
 @Slf4j
 @RequiredArgsConstructor
 public final class RocketMqConsumerRegistrar implements SmartInitializingSingleton {
+
     private final ApplicationContext applicationContext;
     private final EventSubscriber eventSubscriber;
 
@@ -38,7 +39,7 @@ public final class RocketMqConsumerRegistrar implements SmartInitializingSinglet
                 continue;
             }
             try {
-                eventSubscriber.bind(unchecked(handler));
+                eventSubscriber.bind(handler);
                 log.info("Auto-registered EventHandler {} with @EventConsumer", userClass.getName());
             } catch (MessageException ex) {
                 throw ex;
@@ -46,10 +47,5 @@ public final class RocketMqConsumerRegistrar implements SmartInitializingSinglet
                 throw new MessageException("CONFIGURATION_FAILED: failed to register " + userClass.getName(), ex);
             }
         }
-    }
-
-    @SuppressWarnings({"rawtypes"})
-    private static EventHandler unchecked(EventHandler handler) {
-        return handler;
     }
 }
