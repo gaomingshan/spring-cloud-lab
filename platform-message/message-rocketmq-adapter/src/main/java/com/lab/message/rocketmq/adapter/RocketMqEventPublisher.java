@@ -22,7 +22,7 @@ public final class RocketMqEventPublisher implements EventPublisher {
 
     @Override
     public void publishOrdered(BaseEvent event) {
-        String partitionKey = event == null ? null : event.resolvePartitionKey();
+        String partitionKey = event == null ? null : event.getPartitionKey();
         if (partitionKey == null || partitionKey.isBlank()) {
             throw new MessageException("VALIDATION_FAILED: partitionKey or aggregateId is required for ordered publishing");
         }
