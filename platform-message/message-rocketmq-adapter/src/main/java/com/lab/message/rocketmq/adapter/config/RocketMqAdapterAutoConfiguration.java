@@ -5,7 +5,6 @@ import com.lab.message.contract.EventSubscriber;
 import com.lab.message.rocketmq.adapter.RocketMqConsumerRegistrar;
 import com.lab.message.rocketmq.adapter.RocketMqEventPublisher;
 import com.lab.message.rocketmq.adapter.RocketMqEventSubscriber;
-import com.lab.message.rocketmq.adapter.RocketMqMessageFacade;
 import com.lab.message.rocketmq.adapter.RocketMqMessageMapper;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
@@ -25,7 +24,7 @@ import org.springframework.context.annotation.Primary;
 @AutoConfigureAfter(name = "org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration")
 @EnableConfigurationProperties(RocketMqAdapterProperties.class)
 @ConditionalOnClass({RocketMQTemplate.class, RocketMQAutoConfiguration.class})
-@ConditionalOnProperty(prefix = "lab.message.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class RocketMqAdapterAutoConfiguration {
 
     @Bean
@@ -36,40 +35,30 @@ public class RocketMqAdapterAutoConfiguration {
 
     @Bean
     @Primary
-    @ConditionalOnMissingBean(RocketMqMessageFacade.class)
-    @ConditionalOnBean({RocketMQTemplate.class, RocketMQMessageListenerContainerRegistrar.class})
-    RocketMqMessageFacade rocketMqMessageFacade(
-        RocketMQTemplate template,
-        RocketMqMessageMapper mapper,
+    @ConditionalOnMissingBean(EventPublisher.class)
+    @ConditionalOnBean(RocketMQTemplate.class)
+    EventPublisher eventPublisher(RocketMQTemplate template, RocketMqMessageMapper mapper) {
+        return new RocketMqEventPublisher(template, mapper);
+    }
+
+    @Bean
+    @Primary
+    @ConditionalOnMissingBean(EventSubscriber.class)
+    @ConditionalOnBean(RocketMQMessageListenerContainerRegistrar.class)
+    EventSubscriber eventSubscriber(
         RocketMQMessageListenerContainerRegistrar registrar,
         RocketMqAdapterProperties adapterProperties
     ) {
-        RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper);
-        RocketMqEventSubscriber subscriber = new RocketMqEventSubscriber(registrar, adapterProperties);
-        return new RocketMqMessageFacade(publisher, subscriber);
+        return new RocketMqEventSubscriber(registrar, adapterProperties);
     }
 
     @Bean
     @ConditionalOnMissingBean(RocketMqConsumerRegistrar.class)
-    @ConditionalOnBean(RocketMqMessageFacade.class)
+    @ConditionalOnBean(EventSubscriber.class)
     RocketMqConsumerRegistrar rocketMqConsumerRegistrar(
         ApplicationContext applicationContext,
         EventSubscriber eventSubscriber
     ) {
         return new RocketMqConsumerRegistrar(applicationContext, eventSubscriber);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(EventPublisher.class)
-    @ConditionalOnBean(RocketMqMessageFacade.class)
-    EventPublisher eventPublisher(RocketMqMessageFacade facade) {
-        return facade;
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(EventSubscriber.class)
-    @ConditionalOnBean(RocketMqMessageFacade.class)
-    EventSubscriber eventSubscriber(RocketMqMessageFacade facade) {
-        return facade;
     }
 }

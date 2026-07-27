@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @EventConsumer(topic = "lab.order-events", group = "message-lab-order-audit")
-@ConditionalOnProperty(prefix = "lab.message.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class OrderAuditHandler implements EventHandler<OrderLifecycleEvent> {
 
     @Override

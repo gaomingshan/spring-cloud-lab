@@ -16,7 +16,6 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.util.ClassUtils;
 
 import java.lang.reflect.Modifier;
-import java.util.Map;
 
 @RequiredArgsConstructor
 public final class RocketMqEventSubscriber implements EventSubscriber {
@@ -49,8 +48,8 @@ public final class RocketMqEventSubscriber implements EventSubscriber {
         }
         topic = topic.trim();
         group = group.trim();
-        Map<String, Object> attrs = RocketMqListenerAnnotationFactory.buildAttributes(
-                topic, group, adapterProperties.overlay(topic, group));
+        var attrs = RocketMqListenerAnnotationFactory.buildAttributes(
+                topic, group, adapterProperties.findConsumer(topic, group));
         RocketMQMessageListener annotation = AnnotationUtils.synthesizeAnnotation(
                 attrs, RocketMQMessageListener.class, null);
         String beanName = "labRocketMqListener-" + group + "-" + topic + "-" + eventType.getSimpleName()

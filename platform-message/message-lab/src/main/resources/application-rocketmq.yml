@@ -2,13 +2,14 @@ lab:
   message:
     local:
       enabled: false
-    adapter:
-      enabled: true
-      consumers:
-        lab.order-events:
-          message-lab-order-primary:
-            consumeMode: CONCURRENTLY
-          message-lab-order-audit: {}
+    rocketmq:
+      adapter:
+        enabled: true
+        consumers:
+          lab.order-events:
+            message-lab-order-primary:
+              consume-mode: CONCURRENTLY
+            message-lab-order-audit: {}
 
 # Official Apache RocketMQ Spring (sole native config source)
 rocketmq:

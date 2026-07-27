@@ -14,12 +14,12 @@ public final class RocketMqMessageMapper {
         }
         return MessageBuilder.withPayload(event)
             .setHeader(RocketMQHeaders.KEYS, event.getEventId())
-            .setHeader("lab.event-id", event.getEventId())
-            .setHeader("lab.event-class", event.getClass().getName())
-            .setHeader("lab.event-type", event.getEventType())
-            .setHeader("lab.producer", event.getProducer())
-            .setHeader("lab.aggregate-type", event.getAggregateType())
-            .setHeader("lab.aggregate-id", event.getAggregateId())
+            .setHeader(RocketMqMessageHeaders.EVENT_ID, event.getEventId())
+            .setHeader(RocketMqMessageHeaders.EVENT_CLASS, event.getClass().getName())
+            .setHeader(RocketMqMessageHeaders.EVENT_TYPE, event.getEventType())
+            .setHeader(RocketMqMessageHeaders.PRODUCER, event.getProducer())
+            .setHeader(RocketMqMessageHeaders.AGGREGATE_TYPE, event.getAggregateType())
+            .setHeader(RocketMqMessageHeaders.AGGREGATE_ID, event.getAggregateId())
             .copyHeaders(event.getHeaders())
             .build();
     }
