@@ -45,11 +45,13 @@ public class RocketMqAdapterAutoConfiguration {
     @Primary
     @ConditionalOnMissingBean(RocketMqMessageFacade.class)
     @ConditionalOnBean({RocketMQTemplate.class, RocketMQMessageListenerContainerRegistrar.class})
-    RocketMqMessageFacade rocketMqMessageFacade(RocketMQTemplate template,
-                                                RocketMqMessageMapper mapper,
-                                                RocketMqDelayLevelResolver delayLevels,
-                                                RocketMQMessageListenerContainerRegistrar registrar,
-                                                RocketMqAdapterProperties adapterProperties) {
+    RocketMqMessageFacade rocketMqMessageFacade(
+        RocketMQTemplate template,
+        RocketMqMessageMapper mapper,
+        RocketMqDelayLevelResolver delayLevels,
+        RocketMQMessageListenerContainerRegistrar registrar,
+        RocketMqAdapterProperties adapterProperties
+    ) {
         RocketMqEventPublisher publisher = new RocketMqEventPublisher(template, mapper, delayLevels);
         RocketMqEventSubscriber subscriber = new RocketMqEventSubscriber(registrar, adapterProperties);
         return new RocketMqMessageFacade(publisher, subscriber);
@@ -58,8 +60,10 @@ public class RocketMqAdapterAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(RocketMqConsumerRegistrar.class)
     @ConditionalOnBean(RocketMqMessageFacade.class)
-    RocketMqConsumerRegistrar rocketMqConsumerRegistrar(ApplicationContext applicationContext,
-                                                        EventSubscriber eventSubscriber) {
+    RocketMqConsumerRegistrar rocketMqConsumerRegistrar(
+        ApplicationContext applicationContext,
+        EventSubscriber eventSubscriber
+    ) {
         return new RocketMqConsumerRegistrar(applicationContext, eventSubscriber);
     }
 
