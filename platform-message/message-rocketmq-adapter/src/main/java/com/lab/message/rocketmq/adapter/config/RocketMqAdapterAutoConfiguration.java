@@ -49,7 +49,7 @@ public class RocketMqAdapterAutoConfiguration {
         RocketMQMessageListenerContainerRegistrar registrar,
         RocketMqAdapterProperties adapterProperties
     ) {
-        return new RocketMqEventSubscriber(registrar, adapterProperties);
+        return RocketMqEventSubscriber.create(registrar, adapterProperties);
     }
 
     @Bean

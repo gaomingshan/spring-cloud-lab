@@ -1,0 +1,17 @@
+package com.lab.message.rocketmq.adapter;
+
+import com.lab.message.contract.BaseEvent;
+import lombok.RequiredArgsConstructor;
+import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
+
+@RequiredArgsConstructor
+final class RocketMqListenerRegistrar {
+    private final RocketMQMessageListenerContainerRegistrar registrar;
+
+    <E extends BaseEvent> void register(RocketMqListenerDefinition<E> definition) {
+        registrar.registerContainer(
+                definition.beanName(),
+                new RocketMqTypedListener<>(definition.eventType(), definition.handler()),
+                definition.listener());
+    }
+}
