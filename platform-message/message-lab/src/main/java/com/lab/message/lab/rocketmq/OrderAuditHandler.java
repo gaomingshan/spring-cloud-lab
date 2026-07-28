@@ -2,22 +2,23 @@ package com.lab.message.lab.rocketmq;
 
 import com.lab.message.contract.EventConsumer;
 import com.lab.message.contract.EventHandler;
-import com.lab.message.lab.event.OrderLifecycleEvent;
+import com.lab.message.lab.event.OrderCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@EventConsumer(topic = "lab.order-events", group = "message-lab-order-audit")
+@EventConsumer(topic = "lab.order-created-events", group = "message-lab-order-audit")
 @ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class OrderAuditHandler implements EventHandler<OrderLifecycleEvent> {
+public class OrderAuditHandler implements EventHandler<OrderCreatedEvent> {
 
     @Override
-    public void handle(OrderLifecycleEvent event) {
-        log.info("[rocketmq:audit] phase={} eventId={} producer={}",
-                event.getPhase(),
+    public void handle(OrderCreatedEvent event) {
+        log.info("[rocketmq][consume][audit] eventId={} eventType={} producer={} thread={}",
                 event.getEventId(),
-                event.getProducer());
+                event.getEventType(),
+                event.getProducer(),
+                Thread.currentThread().getName());
     }
 }

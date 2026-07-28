@@ -2,26 +2,23 @@ package com.lab.message.lab.rocketmq;
 
 import com.lab.message.contract.EventConsumer;
 import com.lab.message.contract.EventHandler;
-import com.lab.message.lab.event.OrderLifecycleEvent;
+import com.lab.message.lab.event.OrderCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@EventConsumer(topic = "lab.order-events", group = "message-lab-order-primary")
+@EventConsumer(topic = "lab.order-created-events", group = "message-lab-order-primary")
 @ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class OrderPrimaryHandler implements EventHandler<OrderLifecycleEvent> {
+public class OrderPrimaryHandler implements EventHandler<OrderCreatedEvent> {
 
     @Override
-    public void handle(OrderLifecycleEvent event) {
-        log.info("[rocketmq:primary] phase={} eventId={} eventType={} aggregateId={} create={} payment={} cancel={}",
-                event.getPhase(),
+    public void handle(OrderCreatedEvent event) {
+        log.info("[rocketmq][consume][primary] eventId={} orderId={} amount={} thread={}",
                 event.getEventId(),
-                event.getEventType(),
-                event.getAggregateId(),
-                event.getCreate() != null ? event.getCreate().getOrderId() : null,
-                event.getPayment() != null ? event.getPayment().getPaymentId() : null,
-                event.getCancel() != null ? event.getCancel().getReason() : null);
+                event.getOrder().getOrderId(),
+                event.getOrder().getAmount(),
+                Thread.currentThread().getName());
     }
 }

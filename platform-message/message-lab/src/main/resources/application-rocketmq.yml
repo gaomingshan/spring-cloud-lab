@@ -6,10 +6,13 @@ lab:
       adapter:
         enabled: true
         consumers:
-          lab.order-events:
+          lab.order-created-events:
             message-lab-order-primary:
               consume-mode: CONCURRENTLY
-            message-lab-order-audit: {}
+              consume-thread-number: 2
+            message-lab-order-audit:
+              consume-mode: CONCURRENTLY
+              consume-thread-number: 2
 
 # Official Apache RocketMQ Spring (sole native config source)
 rocketmq:

@@ -2,4 +2,4 @@ spring:
   application:
     name: message-lab
   profiles:
-    active: local
+    active: rocketmq
