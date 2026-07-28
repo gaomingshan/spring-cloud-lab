@@ -17,8 +17,8 @@ public class OrderPrimaryHandler implements EventHandler<OrderCreatedEvent> {
     public void handle(OrderCreatedEvent event) {
         log.info("[rocketmq][consume][primary] eventId={} orderId={} amount={} thread={}",
                 event.getEventId(),
-                event.getOrder().getOrderId(),
-                event.getOrder().getAmount(),
+                event.getOrder().orderId(),
+                event.getOrder().amount(),
                 Thread.currentThread().getName());
     }
 }

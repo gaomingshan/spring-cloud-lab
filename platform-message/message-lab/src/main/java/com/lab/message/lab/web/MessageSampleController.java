@@ -23,11 +23,11 @@ public class MessageSampleController {
     public Map<String, String> publish() {
         OrderCreatedEvent event = SampleEvents.orderCreated();
         log.info("[rocketmq][publish] eventId={} orderId={} topic=lab.order-created-events thread={}",
-                event.getEventId(), event.getOrder().getOrderId(), Thread.currentThread().getName());
+                 event.getEventId(), event.getOrder().orderId(), Thread.currentThread().getName());
         eventPublisher.publish(event);
         return Map.of(
                 "status", "published",
                 "eventId", event.getEventId(),
-                "orderId", event.getOrder().getOrderId());
+                "orderId", event.getOrder().orderId());
     }
 }

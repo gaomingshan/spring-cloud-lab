@@ -47,8 +47,8 @@ public final class OrderCreatedEvent extends BaseEvent {
                 producer,
                 "order.created",
                 "Order",
-                order.getOrderId(),
-                order.getOrderId(),
+                order.orderId(),
+                order.orderId(),
                 eventId,
                 Map.of("sample", "true"),
                 order);
