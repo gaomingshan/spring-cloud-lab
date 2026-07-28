@@ -8,6 +8,7 @@ import com.lab.message.rocketmq.adapter.subscriber.RocketMqEventSubscriber;
 import com.lab.message.rocketmq.adapter.support.RocketMqMessageMapper;
 import org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration;
 import org.apache.rocketmq.spring.core.RocketMQTemplate;
+import org.apache.rocketmq.spring.support.RocketMQMessageConverter;
 import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -47,9 +48,10 @@ public class RocketMqAdapterAutoConfiguration {
     @ConditionalOnBean(RocketMQMessageListenerContainerRegistrar.class)
     EventSubscriber eventSubscriber(
         RocketMQMessageListenerContainerRegistrar registrar,
+        RocketMQMessageConverter rocketMqMessageConverter,
         RocketMqAdapterProperties adapterProperties
     ) {
-        return RocketMqEventSubscriber.create(registrar, adapterProperties);
+        return RocketMqEventSubscriber.create(registrar, rocketMqMessageConverter, adapterProperties);
     }
 
     @Bean

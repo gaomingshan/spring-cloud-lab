@@ -4,6 +4,7 @@ import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventSubscriber;
 import com.lab.message.rocketmq.adapter.config.RocketMqAdapterProperties;
+import org.apache.rocketmq.spring.support.RocketMQMessageConverter;
 import org.apache.rocketmq.spring.support.RocketMQMessageListenerContainerRegistrar;
 
 public final class RocketMqEventSubscriber implements EventSubscriber {
@@ -24,12 +25,13 @@ public final class RocketMqEventSubscriber implements EventSubscriber {
 
     public static RocketMqEventSubscriber create(
         RocketMQMessageListenerContainerRegistrar registrar,
+        RocketMQMessageConverter rocketMqMessageConverter,
         RocketMqAdapterProperties adapterProperties
     ) {
         return new RocketMqEventSubscriber(
             new RocketMqHandlerDescriptorResolver(),
             new RocketMqListenerDefinitionFactory(adapterProperties),
-            new RocketMqListenerRegistrar(registrar));
+            new RocketMqListenerRegistrar(registrar, rocketMqMessageConverter.getMessageConverter()));
     }
 
     @Override

@@ -1,7 +1,5 @@
 lab:
   message:
-    local:
-      enabled: false
     rocketmq:
       adapter:
         enabled: true
@@ -16,6 +14,6 @@ lab:
 
 # Official Apache RocketMQ Spring (sole native config source)
 rocketmq:
-  name-server: 127.0.0.1:9876
+  name-server: 192.168.179.128:9876
   producer:
     group: ${spring.application.name}-producer
