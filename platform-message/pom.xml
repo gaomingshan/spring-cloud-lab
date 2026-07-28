@@ -15,7 +15,6 @@
 
     <modules>
         <module>message-contract</module>
-        <module>message-local-starter</module>
         <module>message-rocketmq-adapter</module>
         <module>message-lab</module>
     </modules>

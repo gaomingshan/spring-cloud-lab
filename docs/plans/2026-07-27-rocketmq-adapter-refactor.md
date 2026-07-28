@@ -53,4 +53,4 @@
 **Steps:**
 1. Confirm old facade, raw consumer maps, and generic adapter configuration prefix no longer occur in production code.
 2. Run Maven compile for contract, local starter, RocketMQ adapter, and message lab:
-   `mvn -pl platform-message/message-contract,platform-message/message-local-starter,platform-message/message-rocketmq-adapter,platform-message/message-lab -am -DskipTests compile`
+   `mvn -pl platform-message/message-contract,platform-message/message-rocketmq-adapter,platform-message/message-lab -am -DskipTests compile`
