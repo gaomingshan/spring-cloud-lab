@@ -1,0 +1,58 @@
+- generic [active] [ref=f3e1]:
+  - generic [ref=f3e8]:
+    - link "RocketMQ仪表板" [ref=f3e10] [cursor=pointer]:
+      - /url: "#/"
+    - generic [ref=f3e11]:
+      - list [ref=f3e12]:
+        - listitem [ref=f3e13]:
+          - link "运维" [ref=f3e14] [cursor=pointer]:
+            - /url: "#/ops"
+        - listitem [ref=f3e15]:
+          - link "驾驶舱" [ref=f3e16] [cursor=pointer]:
+            - /url: "#/"
+        - listitem [ref=f3e17]:
+          - link "集群" [ref=f3e18] [cursor=pointer]:
+            - /url: "#/cluster"
+        - listitem [ref=f3e19]:
+          - link "主题" [ref=f3e20] [cursor=pointer]:
+            - /url: "#/topic"
+        - listitem [ref=f3e21]:
+          - link "消费者" [ref=f3e22] [cursor=pointer]:
+            - /url: "#/consumer"
+        - listitem [ref=f3e23]:
+          - link "生产者" [ref=f3e24] [cursor=pointer]:
+            - /url: "#/producer"
+        - listitem [ref=f3e25]:
+          - link "消息" [ref=f3e26] [cursor=pointer]:
+            - /url: "#/message"
+        - listitem [ref=f3e27]:
+          - link "消息轨迹" [ref=f3e28] [cursor=pointer]:
+            - /url: "#/messageTrace"
+      - list [ref=f3e29]:
+        - listitem [ref=f3e30]:
+          - link "更换语言" [ref=f3e31] [cursor=pointer]:
+            - /url: bootstrap-elements.html
+        - listitem [ref=f3e33]:
+          - link "admin" [ref=f3e34] [cursor=pointer]:
+            - /url: bootstrap-elements.html
+  - generic [ref=f3e80]:
+    - generic [ref=f3e81]: "集群 :"
+    - generic [ref=f3e84]:
+      - generic [ref=f3e85]: No results match
+      - generic [ref=f3e89]:
+        - textbox [disabled] [ref=f3e91]
+        - list
+    - table [ref=f3e92]:
+      - rowgroup [ref=f3e93]:
+        - row [ref=f3e94]:
+          - columnheader "分片" [ref=f3e95]
+          - columnheader "编号" [ref=f3e96]
+          - columnheader "地址" [ref=f3e97]
+          - columnheader "版本" [ref=f3e98]
+          - columnheader "生产消息TPS" [ref=f3e99]
+          - columnheader "消费消息TPS" [ref=f3e100]
+          - columnheader "昨日生产总数" [ref=f3e101]
+          - columnheader "昨日消费总数" [ref=f3e102]
+          - columnheader "今天生产总数" [ref=f3e103]
+          - columnheader "今天消费总数" [ref=f3e104]
+          - columnheader "操作" [ref=f3e105]
