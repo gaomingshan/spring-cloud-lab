@@ -1,0 +1,28 @@
+lab:
+  message:
+    rocketmq:
+      adapter:
+        enabled: false
+    kafka:
+      adapter:
+        enabled: true
+        consumers:
+          lab_order_created_events:
+            message-lab-order-primary:
+              concurrency: 2
+            message-lab-order-audit:
+              concurrency: 2
+
+spring:
+  kafka:
+    bootstrap-servers: 127.0.0.1:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      ack-mode: record

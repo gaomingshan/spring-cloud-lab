@@ -4,13 +4,13 @@ import com.lab.message.contract.EventConsumer;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.lab.event.OrderCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
 @EventConsumer(topic = "lab_order_created_events", group = "message-lab-order-audit")
-@ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
+@Profile({"rocketmq", "kafka"})
 public class OrderAuditHandler implements EventHandler<OrderCreatedEvent> {
 
     @Override

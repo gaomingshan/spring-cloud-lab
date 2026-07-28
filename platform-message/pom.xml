@@ -16,6 +16,7 @@
     <modules>
         <module>message-contract</module>
         <module>message-rocketmq-adapter</module>
+        <module>message-kafka-adapter</module>
         <module>message-lab</module>
     </modules>
 </project>

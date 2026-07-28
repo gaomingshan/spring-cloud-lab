@@ -22,12 +22,26 @@ public class MessageSampleController {
     @PostMapping("/publish")
     public Map<String, String> publish() {
         OrderCreatedEvent event = SampleEvents.orderCreated();
-        log.info("[rocketmq][publish] eventId={} orderId={} topic=lab_order_created_events thread={}",
-                 event.getEventId(), event.getOrder().orderId(), Thread.currentThread().getName());
+        log.info("[message][publish] mode=ordinary eventId={} orderId={} topic=lab_order_created_events thread={}",
+                event.getEventId(), event.getOrder().orderId(), Thread.currentThread().getName());
         eventPublisher.publish(event);
+        return result("published", event);
+    }
+
+    @PostMapping("/publish/ordered")
+    public Map<String, String> publishOrdered() {
+        OrderCreatedEvent event = SampleEvents.orderCreated();
+        log.info("[message][publish] mode=ordered eventId={} partitionKey={} topic=lab_order_created_events thread={}",
+                event.getEventId(), event.getPartitionKey(), Thread.currentThread().getName());
+        eventPublisher.publishOrdered(event);
+        return result("published-ordered", event);
+    }
+
+    private static Map<String, String> result(String status, OrderCreatedEvent event) {
         return Map.of(
-                "status", "published",
+                "status", status,
                 "eventId", event.getEventId(),
-                "orderId", event.getOrder().orderId());
+                "orderId", event.getOrder().orderId(),
+                "partitionKey", event.getPartitionKey());
     }
 }
