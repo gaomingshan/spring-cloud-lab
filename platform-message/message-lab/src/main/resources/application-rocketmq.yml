@@ -4,7 +4,7 @@ lab:
       adapter:
         enabled: true
         consumers:
-          lab.order-created-events:
+          lab_order_created_events:
             message-lab-order-primary:
               consume-mode: CONCURRENTLY
               consume-thread-number: 2

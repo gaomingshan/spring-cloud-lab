@@ -15,7 +15,7 @@ import java.util.Map;
 
 @Getter
 @ToString(callSuper = true)
-@EventProducer(topic = "lab.order-created-events")
+@EventProducer(topic = "lab_order_created_events")
 @JsonIgnoreProperties(ignoreUnknown = true)
 public final class OrderCreatedEvent extends BaseEvent {
     private final OrderCreateModel order;

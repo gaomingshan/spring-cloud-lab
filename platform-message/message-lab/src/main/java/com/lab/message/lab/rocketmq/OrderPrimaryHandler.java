@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
-@EventConsumer(topic = "lab.order-created-events", group = "message-lab-order-primary")
+@EventConsumer(topic = "lab_order_created_events", group = "message-lab-order-primary")
 @ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class OrderPrimaryHandler implements EventHandler<OrderCreatedEvent> {
 
