@@ -17,36 +17,39 @@ final class RocketMqHandlerDescriptorResolver {
             throw new MessageException("VALIDATION_FAILED: handler is required");
         }
 
-        Class<?> handlerClass = ClassUtils.getUserClass(handler);
-        EventConsumer consumer = findConsumer(handlerClass);
-        Class<E> eventType = resolveEventType(handler, handlerClass);
+        Class<?> handlerType = ClassUtils.getUserClass(handler);
+        EventConsumer consumer = findConsumer(handlerType);
         return new RocketMqHandlerDescriptor<>(
                 requireValue(consumer.topic(), "topic"),
                 requireValue(consumer.group(), "group"),
-                eventType,
+                resolveEventType(handlerType),
                 handler);
     }
 
-    private static EventConsumer findConsumer(Class<?> handlerClass) {
-        EventConsumer consumer = AnnotatedElementUtils.findMergedAnnotation(handlerClass, EventConsumer.class);
+    private static EventConsumer findConsumer(Class<?> handlerType) {
+        EventConsumer consumer = AnnotatedElementUtils.findMergedAnnotation(handlerType, EventConsumer.class);
         if (consumer == null) {
-            throw new MessageException("VALIDATION_FAILED: @EventConsumer is required on EventHandler type "
-                    + handlerClass.getName());
+            throw new MessageException("VALIDATION_FAILED: @EventConsumer is required on EventHandler type " + handlerType.getName());
         }
         return consumer;
     }
 
-    private static <E extends BaseEvent> Class<E> resolveEventType(EventHandler<E> handler, Class<?> handlerClass) {
-        Class<?> resolved = ResolvableType.forClass(ClassUtils.getUserClass(handler))
+    private static <E extends BaseEvent> Class<E> resolveEventType(Class<?> handlerType) {
+        Class<?> eventType = ResolvableType.forClass(handlerType)
                 .as(EventHandler.class)
                 .getGeneric(0)
                 .resolve();
-        if (resolved == null || resolved == BaseEvent.class
-                || Modifier.isAbstract(resolved.getModifiers()) || resolved.isInterface()) {
-            throw new MessageException("VALIDATION_FAILED: EventHandler must declare a concrete event type: "
-                    + handlerClass.getName());
+        if (!isConcreteEventType(eventType)) {
+            throw new MessageException("VALIDATION_FAILED: EventHandler must declare a concrete event type: " + handlerType.getName());
         }
-        return castEventType(resolved);
+        return castEventType(eventType);
+    }
+
+    private static boolean isConcreteEventType(Class<?> eventType) {
+        return eventType != null
+                && eventType != BaseEvent.class
+                && !Modifier.isAbstract(eventType.getModifiers())
+                && !eventType.isInterface();
     }
 
     private static String requireValue(String value, String attribute) {
