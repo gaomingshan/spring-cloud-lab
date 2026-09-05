@@ -22,30 +22,34 @@ final class KafkaHandlerDescriptorResolver {
         return new KafkaHandlerDescriptor<>(
                 requireValue(consumer.topic(), "topic"),
                 requireValue(consumer.group(), "group"),
-                resolveEventType(handler, handlerType),
+                resolveEventType(handlerType),
                 handler);
     }
 
     private static EventConsumer findConsumer(Class<?> handlerType) {
         EventConsumer consumer = AnnotatedElementUtils.findMergedAnnotation(handlerType, EventConsumer.class);
         if (consumer == null) {
-            throw new MessageException("VALIDATION_FAILED: @EventConsumer is required on EventHandler type "
-                    + handlerType.getName());
+            throw new MessageException("VALIDATION_FAILED: @EventConsumer is required on EventHandler type " + handlerType.getName());
         }
         return consumer;
     }
 
-    private static <E extends BaseEvent> Class<E> resolveEventType(EventHandler<E> handler, Class<?> handlerType) {
-        Class<?> eventType = ResolvableType.forClass(ClassUtils.getUserClass(handler))
+    private static <E extends BaseEvent> Class<E> resolveEventType(Class<?> handlerType) {
+        Class<?> eventType = ResolvableType.forClass(handlerType)
                 .as(EventHandler.class)
                 .getGeneric(0)
                 .resolve();
-        if (eventType == null || eventType == BaseEvent.class
-                || Modifier.isAbstract(eventType.getModifiers()) || eventType.isInterface()) {
-            throw new MessageException("VALIDATION_FAILED: EventHandler must declare a concrete event type: "
-                    + handlerType.getName());
+        if (!isConcreteEventType(eventType)) {
+            throw new MessageException("VALIDATION_FAILED: EventHandler must declare a concrete event type: " + handlerType.getName());
         }
         return castEventType(eventType);
+    }
+
+    private static boolean isConcreteEventType(Class<?> eventType) {
+        return eventType != null
+                && eventType != BaseEvent.class
+                && !Modifier.isAbstract(eventType.getModifiers())
+                && !eventType.isInterface();
     }
 
     private static String requireValue(String value, String attribute) {
