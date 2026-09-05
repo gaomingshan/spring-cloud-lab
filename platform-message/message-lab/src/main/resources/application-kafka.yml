@@ -1,18 +1,4 @@
-lab:
-  message:
-    rocketmq:
-      adapter:
-        enabled: false
-    kafka:
-      adapter:
-        enabled: true
-        consumers:
-          lab_order_created_events:
-            message-lab-order-primary:
-              concurrency: 2
-            message-lab-order-audit:
-              concurrency: 2
-
+# Official Spring Kafka configuration.
 spring:
   kafka:
     bootstrap-servers: 127.0.0.1:9092
@@ -26,3 +12,4 @@ spring:
       enable-auto-commit: false
     listener:
       ack-mode: record
+      concurrency: 2

@@ -15,17 +15,13 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Profile;
 
 @AutoConfiguration
 @AutoConfigureAfter(name = "org.apache.rocketmq.spring.autoconfigure.RocketMQAutoConfiguration")
-@EnableConfigurationProperties(RocketMqAdapterProperties.class)
-@ConditionalOnClass({RocketMQTemplate.class, RocketMQAutoConfiguration.class})
-@ConditionalOnProperty(prefix = "lab.message.rocketmq.adapter", name = "enabled", havingValue = "true", matchIfMissing = true)
+@Profile("rocketmq")
 public class RocketMqAdapterAutoConfiguration {
 
     @Bean
@@ -35,7 +31,6 @@ public class RocketMqAdapterAutoConfiguration {
     }
 
     @Bean
-    @Primary
     @ConditionalOnMissingBean(EventPublisher.class)
     @ConditionalOnBean(RocketMQTemplate.class)
     EventPublisher eventPublisher(RocketMQTemplate template, RocketMqMessageMapper mapper) {
@@ -43,15 +38,13 @@ public class RocketMqAdapterAutoConfiguration {
     }
 
     @Bean
-    @Primary
     @ConditionalOnMissingBean(EventSubscriber.class)
     @ConditionalOnBean(RocketMQMessageListenerContainerRegistrar.class)
     EventSubscriber eventSubscriber(
         RocketMQMessageListenerContainerRegistrar registrar,
-        RocketMQMessageConverter rocketMqMessageConverter,
-        RocketMqAdapterProperties adapterProperties
+        RocketMQMessageConverter rocketMqMessageConverter
     ) {
-        return RocketMqEventSubscriber.create(registrar, rocketMqMessageConverter, adapterProperties);
+        return RocketMqEventSubscriber.create(registrar, rocketMqMessageConverter);
     }
 
     @Bean

@@ -6,7 +6,6 @@ import com.lab.message.contract.EventConsumer;
 import com.lab.message.contract.EventHandler;
 import com.lab.message.contract.EventSubscriber;
 import com.lab.message.contract.MessageException;
-import com.lab.message.kafka.adapter.config.KafkaAdapterProperties;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -21,7 +20,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public final class KafkaEventSubscriber implements EventSubscriber {
     private final ConcurrentKafkaListenerContainerFactory<String, String> containerFactory;
-    private final KafkaAdapterProperties adapterProperties;
     private final ObjectMapper objectMapper;
     private final List<ConcurrentMessageListenerContainer<String, String>> containers = new ArrayList<>();
 
@@ -31,7 +29,6 @@ public final class KafkaEventSubscriber implements EventSubscriber {
         ConcurrentMessageListenerContainer<String, String> container = containerFactory.createContainer(definition.topic());
         container.getContainerProperties().setGroupId(definition.group());
         container.getContainerProperties().setMessageListener(listener(definition));
-        container.setConcurrency(concurrency(definition.topic(), definition.group()));
         container.start();
         containers.add(container);
     }
@@ -47,11 +44,6 @@ public final class KafkaEventSubscriber implements EventSubscriber {
         }
         Class<E> eventType = resolveEventType(handler, handlerType);
         return new ListenerDefinition<>(consumer.topic().trim(), consumer.group().trim(), eventType, handler);
-    }
-
-    private int concurrency(String topic, String group) {
-        KafkaAdapterProperties.ConsumerProperties consumer = adapterProperties.findConsumer(topic, group);
-        return consumer == null ? 1 : Math.max(1, consumer.getConcurrency());
     }
 
     private <E extends BaseEvent> MessageListener<String, String> listener(ListenerDefinition<E> definition) {

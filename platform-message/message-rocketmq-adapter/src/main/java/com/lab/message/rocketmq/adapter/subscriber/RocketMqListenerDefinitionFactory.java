@@ -1,24 +1,13 @@
 package com.lab.message.rocketmq.adapter.subscriber;
 
 import com.lab.message.contract.BaseEvent;
-import com.lab.message.rocketmq.adapter.config.RocketMqAdapterProperties;
 import com.lab.message.rocketmq.adapter.support.RocketMqListenerAnnotationFactory;
-import lombok.RequiredArgsConstructor;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
-import org.springframework.core.annotation.AnnotationUtils;
 
-@RequiredArgsConstructor
 final class RocketMqListenerDefinitionFactory {
-    private final RocketMqAdapterProperties adapterProperties;
-
     <E extends BaseEvent> RocketMqListenerDefinition<E> create(RocketMqHandlerDescriptor<E> descriptor) {
-        String topic = descriptor.topic();
-        String group = descriptor.group();
-        RocketMQMessageListener listener = AnnotationUtils.synthesizeAnnotation(
-                RocketMqListenerAnnotationFactory.buildAttributes(
-                        topic, group, adapterProperties.findConsumer(topic, group)),
-                RocketMQMessageListener.class,
-                null);
+        RocketMQMessageListener listener = RocketMqListenerAnnotationFactory.create(
+                descriptor.topic(), descriptor.group());
         return new RocketMqListenerDefinition<>(
                 createBeanName(descriptor),
                 descriptor.eventType(),
