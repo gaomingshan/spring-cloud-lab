@@ -15,7 +15,7 @@ public class OrderPrimaryHandler implements EventHandler<OrderCreatedEvent> {
 
     @Override
     public void handle(OrderCreatedEvent event) {
-        log.info("[rocketmq][consume][primary] eventId={} orderId={} amount={} thread={}",
+        log.info("[message][consume][primary] eventId={} orderId={} amount={} thread={}",
                 event.getEventId(),
                 event.getOrder().orderId(),
                 event.getOrder().amount(),

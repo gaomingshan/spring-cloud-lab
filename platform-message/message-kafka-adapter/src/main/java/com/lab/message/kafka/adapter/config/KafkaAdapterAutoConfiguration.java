@@ -9,6 +9,7 @@ import com.lab.message.kafka.adapter.publisher.KafkaPartitionResolver;
 import com.lab.message.kafka.adapter.subscriber.KafkaConsumerRegistrar;
 import com.lab.message.kafka.adapter.subscriber.KafkaEventSubscriber;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -19,6 +20,7 @@ import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 @AutoConfiguration
+@AutoConfigureAfter(name = "org.springframework.boot.autoconfigure.kafka.KafkaAutoConfiguration")
 @ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
 @Profile("kafka")
 public class KafkaAdapterAutoConfiguration {

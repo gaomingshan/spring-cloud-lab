@@ -15,7 +15,7 @@ public class OrderAuditHandler implements EventHandler<OrderCreatedEvent> {
 
     @Override
     public void handle(OrderCreatedEvent event) {
-        log.info("[rocketmq][consume][audit] eventId={} eventType={} producer={} thread={}",
+        log.info("[message][consume][audit] eventId={} eventType={} producer={} thread={}",
                 event.getEventId(),
                 event.getEventType(),
                 event.getProducer(),
