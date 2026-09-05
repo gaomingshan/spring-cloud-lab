@@ -47,7 +47,7 @@
         <redisson.version>4.0.0</redisson.version>
         <toxiproxy-java.version>2.1.7</toxiproxy-java.version>
         <mapstruct.version>1.6.3</mapstruct.version>
-        <lombok.version>1.18.38</lombok.version>
+        <lombok.version>1.18.48</lombok.version>
 
         <maven-compiler-plugin.version>3.14.0</maven-compiler-plugin.version>
         <maven-enforcer-plugin.version>3.6.2</maven-enforcer-plugin.version>
