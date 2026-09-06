@@ -15,6 +15,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
@@ -30,15 +31,15 @@ public class RocketMqAdapterAutoConfiguration {
         return new RocketMqMessageMapper();
     }
 
-    @Bean
-    @ConditionalOnMissingBean(EventPublisher.class)
+    @Bean("messageEventPublisher")
+    @ConditionalOnMissingBean(name = "messageEventPublisher")
     @ConditionalOnBean(RocketMQTemplate.class)
     EventPublisher eventPublisher(RocketMQTemplate template, RocketMqMessageMapper mapper) {
         return new RocketMqEventPublisher(template, mapper);
     }
 
-    @Bean
-    @ConditionalOnMissingBean(EventSubscriber.class)
+    @Bean("messageEventSubscriber")
+    @ConditionalOnMissingBean(name = "messageEventSubscriber")
     @ConditionalOnBean(RocketMQMessageListenerContainerRegistrar.class)
     EventSubscriber eventSubscriber(
         RocketMQMessageListenerContainerRegistrar registrar,
@@ -52,8 +53,8 @@ public class RocketMqAdapterAutoConfiguration {
     @ConditionalOnBean(EventSubscriber.class)
     RocketMqConsumerRegistrar rocketMqConsumerRegistrar(
         ApplicationContext applicationContext,
-        EventSubscriber eventSubscriber
+        ObjectProvider<EventSubscriber> eventSubscriberProvider
     ) {
-        return new RocketMqConsumerRegistrar(applicationContext, eventSubscriber);
+        return new RocketMqConsumerRegistrar(applicationContext, eventSubscriberProvider);
     }
 }

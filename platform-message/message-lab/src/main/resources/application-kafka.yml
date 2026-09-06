@@ -13,3 +13,17 @@ spring:
     listener:
       ack-mode: record
       concurrency: 2
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/app?useUnicode=true&characterEncoding=utf8&serverTimezone=UTC
+    username: root
+    password: V05d39Hj8e/92g3JRtzLAmFJN6LtHRUb
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    hikari:
+      maximum-pool-size: 8
+      minimum-idle: 2
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:reliable-message-schema.sql
+  transaction:
+    default-timeout: 10

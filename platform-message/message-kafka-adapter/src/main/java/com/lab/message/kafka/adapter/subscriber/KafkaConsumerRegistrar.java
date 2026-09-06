@@ -6,6 +6,7 @@ import com.lab.message.contract.EventSubscriber;
 import com.lab.message.contract.MessageException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -15,7 +16,7 @@ import org.springframework.util.ClassUtils;
 @RequiredArgsConstructor
 public final class KafkaConsumerRegistrar implements SmartInitializingSingleton {
     private final ApplicationContext applicationContext;
-    private final EventSubscriber eventSubscriber;
+    private final ObjectProvider<EventSubscriber> eventSubscriberProvider;
 
     @Override
     public void afterSingletonsInstantiated() {
@@ -26,7 +27,7 @@ public final class KafkaConsumerRegistrar implements SmartInitializingSingleton 
                 continue;
             }
             try {
-                eventSubscriber.bind(handler);
+                eventSubscriberProvider.getObject().bind(handler);
                 log.info("Auto-registered Kafka EventHandler {}", handlerType.getName());
             } catch (MessageException e) {
                 throw e;

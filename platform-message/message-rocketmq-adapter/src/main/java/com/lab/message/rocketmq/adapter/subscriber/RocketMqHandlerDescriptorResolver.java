@@ -3,6 +3,7 @@ package com.lab.message.rocketmq.adapter.subscriber;
 import com.lab.message.contract.BaseEvent;
 import com.lab.message.contract.EventConsumer;
 import com.lab.message.contract.EventHandler;
+import com.lab.message.contract.EventHandlerMetadata;
 import com.lab.message.contract.MessageException;
 import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -17,7 +18,7 @@ final class RocketMqHandlerDescriptorResolver {
             throw new MessageException("VALIDATION_FAILED: handler is required");
         }
 
-        Class<?> handlerType = ClassUtils.getUserClass(handler);
+        Class<?> handlerType = ClassUtils.getUserClass(EventHandlerMetadata.unwrap(handler));
         EventConsumer consumer = findConsumer(handlerType);
         return new RocketMqHandlerDescriptor<>(
                 requireValue(consumer.topic(), "topic"),
